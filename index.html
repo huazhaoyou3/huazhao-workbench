@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="花朝的工作台" />
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjM2IiBmaWxsPSIjZTkxZTYzIi8+PHRleHQgeD0iOTYiIHk9IjE0NiIgZm9udC1zaXplPSIxMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCfjLg8L3RleHQ+PC9zdmc+"/>
+<meta name="application-name" content="花朝的工作台" />
 <title>花朝的工作台</title>
 <style>
   :root {
@@ -63,7 +63,6 @@
     overflow: hidden;
   }
 
-  /* Sidebar - drawer 浮层（位于顶栏下方滑出） */
   #sidebar {
     position: absolute;
     left: 0; top: var(--topbar-h); bottom: 0;
@@ -80,7 +79,6 @@
   }
   #sidebar.hidden { transform: translateX(-100%); }
 
-  /* 侧栏打开时的遮罩 */
   #scrim {
     position: absolute; inset: 0;
     background: rgba(20, 20, 14, 0.42);
@@ -195,6 +193,27 @@
   }
   .mini-btn:active { background: var(--yellow-200); }
 
+  .update-btn {
+    border: 1px solid var(--green-300);
+    background: white;
+    color: var(--green-700);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .update-btn:active { background: var(--green-50); }
+  .update-btn.has-new {
+    background: var(--yellow-100);
+    border-color: var(--yellow-400);
+    color: #6b5400;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
   /* Main */
   #main {
     position: absolute;
@@ -300,8 +319,9 @@
   .section-title .actions button {
     border: none; background: transparent;
     color: var(--ink-500);
-    padding: 4px;
+    padding: 4px 7px;
     border-radius: 6px;
+    font-size: 15px;
   }
   .section-title .actions button:active { background: var(--green-50); }
   .section-title .actions svg { width: 16px; height: 16px; }
@@ -467,6 +487,16 @@
   }
   .image-add:active { background: rgba(125, 174, 92, 0.12); }
   .image-add svg { width: 24px; height: 24px; margin-bottom: 4px; }
+  .image-add.row {
+    aspect-ratio: auto;
+    flex-direction: row;
+    gap: 6px;
+    padding: 13px;
+    margin-top: 10px;
+    width: 100%;
+    font-size: 13px;
+  }
+  .image-add.row svg { width: 18px; height: 18px; margin-bottom: 0; }
 
   .video-add {
     display: flex; flex-direction: row; gap: 6px;
@@ -481,9 +511,30 @@
   }
   .video-add:active { background: rgba(125, 174, 92, 0.14); }
   .video-add svg { width: 20px; height: 20px; }
+  .video-add.sm { padding: 10px; font-size: 13px; }
   .video-list { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
   .video-item { background: rgba(125,174,92,0.05); border: 1px solid var(--ink-200); border-radius: 12px; padding: 8px; }
   .video-item video { width: 100%; border-radius: 8px; background: #000; display: block; }
+  .video-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 8px; }
+
+  .vcheck {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--ink-500);
+    border: 1px solid var(--ink-200);
+    background: white;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer; user-select: none;
+    transition: all 0.15s;
+  }
+  .vcheck::before { content: '○'; font-size: 12px; }
+  .vcheck.on {
+    background: var(--green-100);
+    border-color: var(--green-400);
+    color: var(--green-700);
+    font-weight: 600;
+  }
+  .vcheck.on::before { content: '✓'; }
 
   /* Link list */
   .link-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
@@ -547,6 +598,198 @@
   .btn.primary:active { background: var(--green-600); }
   .btn.warm { background: var(--yellow-300); color: #5d4a00; border-color: var(--yellow-300); }
   .btn.warm:active { background: var(--yellow-400); }
+
+  /* ============== 今日概览（进度 + 连续天数） ============== */
+  .ov-row { display: flex; align-items: center; gap: 12px; }
+  .ov-left { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+  .ov-label { font-family: var(--font-serif); font-size: 13px; color: var(--ink-500); white-space: nowrap; letter-spacing: 1px; }
+  .ov-num { font-size: 13px; font-weight: 600; color: var(--green-700); white-space: nowrap; }
+  .ov-bar { flex: 1; height: 8px; background: var(--green-50); border-radius: 999px; overflow: hidden; border: 1px solid var(--green-100); }
+  .ov-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--green-400), var(--yellow-400)); border-radius: 999px; transition: width .35s ease; }
+  .ov-streak {
+    font-size: 13px; color: #b3541e;
+    background: linear-gradient(135deg, #fff4e3, #ffe9cc);
+    border: 1px solid #f3d9ac;
+    padding: 6px 12px; border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ============== 左右滑动卡片（随心记 / 灵感 / 碎话本） ============== */
+  .swipe-deck { margin-top: 2px; }
+  .swipe-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .swipe-track::-webkit-scrollbar { display: none; }
+  .swipe-card {
+    flex: 0 0 calc(100% - 4px);
+    scroll-snap-align: start;
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    position: relative;
+    box-shadow: var(--shadow-card);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .card-tag {
+    font-size: 11px; color: var(--ink-500);
+    letter-spacing: 1px;
+    font-family: var(--font-serif);
+  }
+  .card-del {
+    border: none; background: transparent;
+    color: var(--ink-500);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    font-size: 17px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .card-del:active { background: #f7e4e4; color: #c0392b; }
+  .card-title {
+    width: 100%;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    background: #fff;
+    outline: none;
+  }
+  .card-title:focus { border-color: var(--green-400); }
+  .swipe-foot {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-top: 10px;
+  }
+  .swipe-arrow {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--ink-200);
+    background: white;
+    color: var(--ink-500);
+    font-size: 18px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .swipe-arrow:active { background: var(--green-50); }
+  .swipe-dots {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .swipe-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: var(--ink-300);
+    opacity: .5;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .swipe-dot.on { background: var(--green-500); opacity: 1; width: 20px; }
+  .swipe-dot.add {
+    width: 22px; height: 22px;
+    background: var(--green-50);
+    border: 1.5px dashed var(--green-400);
+    border-radius: 50%;
+    color: var(--green-600);
+    font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center;
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  /* ============== 每日推荐文稿 ============== */
+  .script-box {
+    background: #fffdf6;
+    border: 1px solid var(--yellow-200);
+    border-radius: var(--radius-md);
+    padding: 14px;
+  }
+  .script-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; gap: 8px;
+  }
+  .script-tag {
+    font-size: 11px;
+    background: var(--yellow-100);
+    color: #8a6d1a;
+    border: 1px solid var(--yellow-300);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .script-date { font-size: 11px; color: var(--ink-500); white-space: nowrap; }
+  .script-title {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    color: var(--ink-900);
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .script-body {
+    font-size: 14px;
+    line-height: 2;
+    color: var(--ink-700);
+    white-space: pre-wrap;
+  }
+  .script-notes {
+    margin-top: 10px;
+    border-top: 1px dashed var(--ink-200);
+    padding-top: 8px;
+  }
+  .script-notes summary {
+    font-size: 13px;
+    color: var(--green-700);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+  }
+  .script-notes ul {
+    margin: 8px 0 0 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    color: var(--ink-500);
+    line-height: 1.9;
+  }
+
+  .hint { font-size: 12px; color: var(--ink-500); margin: 8px 0 0 0; line-height: 1.7; }
+
+  /* 常用标签（每日打卡快捷添加） */
+  .chips-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 10px; align-items: center;
+  }
+  .chips-label {
+    font-size: 12px; color: var(--ink-500);
+    letter-spacing: 1px; font-family: var(--font-serif);
+    margin-right: 2px;
+  }
+  .chip {
+    font-size: 12.5px; padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--green-200);
+    background: var(--green-50);
+    color: var(--green-700);
+    cursor: pointer; user-select: none;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .chip:active { background: var(--green-200); }
+  .chip.added { opacity: 0.4; }
+
+  /* 打卡分组标题（每日固定 / 今日增项） */
+  .check-sub {
+    font-size: 11px; color: var(--ink-500);
+    letter-spacing: 1.5px; font-family: var(--font-serif);
+    margin: 10px 0 2px 4px;
+  }
+  .check-sub:first-child { margin-top: 0; }
 
   /* Modal */
   .modal-mask {
@@ -647,15 +890,6 @@
     letter-spacing: 2px;
   }
   .welcome p { font-size: 14px; line-height: 1.8; }
-
-  /* Swipe hint */
-  .swipe-hint {
-    text-align: center;
-    font-size: 11px;
-    color: var(--ink-500);
-    margin-top: 20px;
-    letter-spacing: 1px;
-  }
 </style>
 </head>
 <body>
@@ -676,6 +910,15 @@
       <div class="data-btns">
         <button class="mini-btn" id="exportBtn">导出</button>
         <button class="mini-btn" id="importBtn">导入</button>
+      </div>
+    </div>
+    <div class="data-bar" style="border-top:none;padding-top:0">
+      <span class="data-label">应用版本</span>
+      <div class="data-btns">
+        <button class="update-btn" id="checkUpdateBtn">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          <span id="updateBtnLabel">检查更新</span>
+        </button>
       </div>
     </div>
   </aside>
@@ -714,11 +957,17 @@
 
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
 <input type="file" id="backupFileInput" accept="application/json,.json" style="display:none" />
-<input type="file" id="videoInput" accept="video/*" style="display:none" />
+<input type="file" id="videoInput" accept="video/*" multiple style="display:none" />
 
 <script>
 /* ============================================================
-   花朝的工作台 - 数据层
+   花朝的工作台 · v2
+   - 每日打卡：新增项永久保留（每日固定清单）
+   - 形色自修：跟练视频库全局共享（每日可见，独立增删）
+   - 花朝知晤：随心记多卡片左右滑动，可插多个视频
+   - 故事灵感簿：灵感多卡片，可插链接/图片（AI 润色已移除）
+   - 说笑备忘录：每日推荐一篇脱口秀文稿 + 碎话本多卡片
+   - 闲杂琐记模块已移除（历史数据仍保留在备份中）
    ============================================================ */
 const STORAGE_KEY = 'huazhao_workbench_v1';
 
@@ -730,31 +979,225 @@ const DEFAULT_CATEGORIES = [
   { id: 'cat_school',  name: '学堂杂务',   icon: '📖', order: 4 },
   { id: 'cat_pub',     name: '公号文稿',   icon: '📜', order: 5 },
   { id: 'cat_story',   name: '故事灵感簿', icon: '✨', order: 6 },
-  { id: 'cat_misc',    name: '闲杂琐记',   icon: '🌾', order: 7 },
-  { id: 'cat_joke',    name: '说笑备忘录', icon: '🎭', order: 8 }
+  { id: 'cat_joke',    name: '说笑备忘录', icon: '🎭', order: 7 }
 ];
 
-// 默认每个分类的打卡项
+/* 每个分类的默认常用项（快捷标签初始池；每日打卡项按天存储，不再固定） */
 const DEFAULT_CHECKS = {
   cat_daily: ['记账', '硬笔行楷', '阅读', '复盘'],
-  cat_shape: {
-    exercise: ['晨跑 20 分钟', '拉伸 10 分钟', '核心训练', '跟练视频']
-  },
-  cat_rui: {
-    growth: ['亲子阅读', '户外活动', '手写日记', '睡前故事']
-  },
-  cat_school: ['教案', '政治笔记', '书法练习', '校本研修'],
-  cat_misc: ['联系家人', '整理收纳', '缴纳账单', '生活采购']
+  cat_shape: { exercise: ['晨跑 20 分钟', '拉伸 10 分钟', '核心训练', '跟练视频'] },
+  cat_rui:   { growth: ['亲子阅读', '户外活动', '手写日记', '睡前故事'] },
+  cat_school: ['教案', '政治笔记', '书法练习', '校本研修']
 };
 
-// 状态
+/* 卡片式模块（左右滑动多条记录）对应的日期数据 key */
+const DECK_KEYS = {
+  cat_zhihu: 'cards',
+  cat_story: 'inspirations',
+  cat_joke:  'crumbCards'
+};
+
+/* ============================================================
+   每日推荐 · 脱口秀文稿库（学习用）
+   ============================================================ */
+const STANDUP_SCRIPTS = [
+  {
+    title: '《早八人》',
+    tag: '职场 · 通勤观察',
+    body: `大家好，我是一个每天早上七点半起床、八点打卡的人。注意，是七点半起床、八点打卡，中间只有半小时。有人问我：你家离公司多远？我说：很近，就隔着一个地铁十号线、两次换乘和一段百米冲刺。
+
+我每天进地铁站，都感觉自己不是去上班，是去参军。安检小哥看我一眼：包打开。我说：同志，我赶时间。他说：那就跑着开。
+
+最神奇的是，我这么辛苦，从来没迟到过。你知道为什么吗？因为我把闹钟定在七点、七点十分、七点二十、七点半。前三个闹钟，是给我做梦用的。最后一个，才是给我的。
+
+所以你看，成年人的自律，不是听到闹钟就起，而是——知道自己关了三个还能起。`,
+    notes: [
+      '开场用「七点半起床、八点打卡」的数字反差，三句话立住人设',
+      '把挤地铁比作参军，用安检对话推进画面感，日常场景戏剧化',
+      '结尾回扣闹钟梗（callback），金句收束：自律是知道关了三个还能起'
+    ]
+  },
+  {
+    title: '《办卡健身》',
+    tag: '消费 · 自嘲',
+    body: `去年我办了张健身卡，三千块，两年。办卡那天，销售小哥拉着我说：姐，您这身材，练三个月就能出道。我说：出道？他说：对，健身博主那种道。
+
+现在一年过去了，我去了两次。第一次是办卡，第二次是去上厕所——因为商场的厕所要消费小票。
+
+前几天健身房给我打电话：姐，好久没来了，要不要约节私教课？我说：不用了，我最近在练一个新项目。他问：什么项目？我说：省钱。这个项目我练得可好了，一年没花过一分钱……哦不对，花过，三千块。
+
+所以办健身卡这件事，本质上不是消费，是修行——你花钱买了个「我会变好」的念想，然后把这个念想，供在钱包里。`,
+    notes: [
+      '「出道」的误解式开场，把销售话术变成笑点来源',
+      '两次去健身房的清单式自嘲，第二次的理由（上厕所）制造预期违背',
+      '结尾把消费升华为「修行」「供在钱包里」，荒诞比喻收束全篇'
+    ]
+  },
+  {
+    title: '《我妈觉得我冷》',
+    tag: '家庭 · 温情',
+    body: `我妈有一种特异功能，隔着两千公里，能感觉到我的体温。
+
+上个月降温，我早上六点收到她的微信：穿秋裤了吗？我说：妈，我看了天气预报，今天二十六度。她说：天气预报是给所有人看的，我是为你看的。
+
+我说不过她，就穿了。结果那天热得我中暑。我跟我妈说：妈，我中暑了。你猜她说什么？她说：你看，不穿秋裤，抵抗力就是差。
+
+我妈的逻辑是一个闭环：我冷，是没穿秋裤；我热，也是没穿秋裤。秋裤在她那儿不是衣服，是法器。
+
+后来我想明白了，跟爸妈讲道理是没用的，你得讲感情。所以现在她再问我穿没穿秋裤，我都说：穿了，还是你给我买的那条，加绒的。她就特别高兴。
+
+其实那条秋裤，我压箱底两年了。但它完成了它的使命——它让两千公里外的我妈，睡了个好觉。`,
+    notes: [
+      '开头一句「特异功能」设置悬念，紧接具体场景展开',
+      '「天气预报是给所有人看的，我是为你看的」——歪理中藏着爱，是全篇情感锚点',
+      '结尾反转上价值：秋裤是法器→是安眠药，自嘲落回温情，观众笑着感动'
+    ]
+  },
+  {
+    title: '《点外卖的学问》',
+    tag: '生活 · 观察',
+    body: `我最近研究出一门学问，叫外卖心理学。
+
+同一个店，你用满减和不用满减，是两种人生。我上礼拜点了份麻辣烫，二十六块，差四块凑三十减八。你猜我怎么着？我加了四块钱的香菜。
+
+八根香菜，四块钱。那一刻我点得庄重极了，像在竞拍一件传家宝。
+
+还有那个配送费，特别有意思。平时三块，下雨天八块，下雪天十二块。我看着窗外的大雪，再看看手机上的十二块配送费，突然悟了：这不就是雪中送炭吗？炭是我点的，雪也是它趁的。
+
+最绝的是备注栏。我有个朋友，每次点外卖都写：请给我画个小老虎。你猜怎么着？真有骑手给他画。画在小票上，歪歪扭扭的，但特别可爱。
+
+所以你看，生活就是这样，你对它认真一分，它就还你一分可爱。当然，四块钱的香菜除外——那个它只还你四块钱的智商税。`,
+    notes: [
+      '「外卖心理学」先立学科名，再用三个案例递进：凑单、配送费、备注栏',
+      '「雪中送炭」的拆字式解读是文字游戏类笑点的典型做法',
+      '结尾金句回扣第一个案例（香菜），首尾呼应同时完成主题升华'
+    ]
+  },
+  {
+    title: '《相亲报告》',
+    tag: '社交 · 叙事',
+    body: `我相过一次亲，对方的资料上写着：成熟稳重，热爱生活。
+
+见面之后我发现，他确实成熟稳重——全程四十分钟，他说了三句话：嗯、对、是这样的。剩下的时间，我们在沉默中共同欣赏了那盆水煮鱼。
+
+热爱生活呢，也是真的。他热爱的是他自己的生活：给我讲了四十分钟他的车、他的房、他的公积金。我插不上一句话，只能点头。点到最后我脖子都酸了，他终于说了句完整的话：你颈椎不好吧？我认识个按摩的。
+
+回家以后，介绍人给我打电话：怎么样？他对你印象特别好，说你文静。
+
+我说：阿姨，我不是文静，我是插不上话。阿姨说：那更好，就喜欢你这样的。
+
+后来我想明白了，相亲这个事，就像开盲盒。只不过盲盒再丑，也就是个摆件；相亲遇到不合适的，你得陪他吃完一整顿水煮鱼。`,
+    notes: [
+      '引用资料上的形容词（成熟稳重、热爱生活），再用事实逐条拆解，结构工整',
+      '「你颈椎不好吧」是场景内的神转折，比直接吐槽高级',
+      '结尾盲盒类比+水煮鱼回扣，把整段经历浓缩成一个金句'
+    ]
+  },
+  {
+    title: '《网购退款大师》',
+    tag: '消费 · 自嘲',
+    body: `我最近获得了一个新身份：网购退款大师。
+
+我买衣服有个习惯：买回来试一下，拍照发闺蜜，然后退货。闺蜜说：你这跟白嫖有什么区别？我说：区别大了，我付出了运费险。
+
+上个月我创了个纪录：买了七件，退了七件。快递小哥都认识我了，有一天他忍不住问我：姐，你就没有一件满意的吗？我说：有啊，满意的都留了。他说：那不是全退了吗？我说：对，说明这七件，配不上我。
+
+其实退货这件事，特别治愈。你想啊，人生中大部分错误决定，都没法退：选错的专业、进错的公司、爱错的人。只有网购，给了你一次反悔的机会，还附赠一条退款成功的短信。
+
+所以每次听到「您的退款已到账」，我都感觉，生活对我还是很温柔的——至少在买衣服这件事上，它允许我说：我再想想。`,
+    notes: [
+      '给自己封头衔「退款大师」，用闺蜜对话交代行为，省去解释成本',
+      '「说明这七件配不上我」——把尴尬反转成骄傲，是自嘲的高级形态',
+      '结尾从搞笑转向抒情（人生无法退货），落点轻而不煽'
+    ]
+  },
+  {
+    title: '《熬夜冠军》',
+    tag: '自律 · 自嘲',
+    body: `我是一个熬夜冠军。我的作息是这样的：十二点，我告诉自己该睡了；十二点半，我刷完这个视频就睡；一点，我看完这集就睡；两点，我好了，我真睡了——然后再刷十分钟手机。
+
+你问我熬这么晚干什么？我也说不上来。也没什么事，就是舍不得睡。白天的时间属于老板，晚上的时间才属于我。熬夜，本质上是打工人在给自己的灵魂加班。
+
+我妈说：你这样会猝死的。我说：妈，不至于，我熬的是快乐。她说：快乐什么？你黑眼圈都到下巴了。
+
+最惨的是第二天早上。闹钟一响，我看着天花板发誓：今晚十一点，我一定睡。结果到了晚上十一点，我精神得能去跑个半马。
+
+后来我学会了跟自己和解。我现在不追求早睡了，我只追求一件事：在两点之前，放下手机。成功率大概……跟我的健身卡使用率差不多。`,
+    notes: [
+      '时间轴式开场（十二点、十二点半、一点、两点），重复结构里藏递进笑点',
+      '「给灵魂加班」一句顶十句，是全文的中间锚点金句',
+      '结尾自嘲式摆烂+跨文本callback（健身卡），适合系列演出互文'
+    ]
+  },
+  {
+    title: '《减肥宣言》',
+    tag: '生活 · 态度',
+    body: `我今年的减肥事业，取得了重大进展：体重没变，但我心态变了。
+
+年初我立了个flag：三个月瘦十斤。现在三个月过去了，我瘦了一斤半。你们别笑，这一斤半含金量很高——它包含了三十次「明天开始」、二十次「就吃这一顿」和十次「吃饱了才有力气减肥」。
+
+我减肥的方法特别科学，叫过午不食。中午十二点以后，我什么都不吃——除了下午茶的水果、四点的酸奶、下班的炸鸡和睡前的牛奶。这些不算吃，这些叫维持生命体征。
+
+我朋友推荐我去跳操，跟着视频跳。我跳了三天，第四天跟不上了。不是我不想跳，是那个教练换了新视频，我找不到原来那个了。你看，我连放弃都放弃得这么有理由。
+
+但是上个礼拜，我买裤子的时候突然想通了。售货员说：这条裤子显瘦。我说：不用显瘦，显我就行了。减肥这个事，说白了是为了开心。既然我现在就挺开心的，那就……明天再说吧。`,
+    notes: [
+      '开场反套路：把「心态变了」当成果宣布，先声夺人',
+      '「过午不食」的例外清单是经典的规则-例外式笑点结构',
+      '「显我就行了」是全文题眼，从自嘲转向自我接纳，立意抬高一度'
+    ]
+  },
+  {
+    title: '《办公室生存》',
+    tag: '职场 · 观察',
+    body: `我们公司有个特别神奇的东西，叫弹性工作制。
+
+弹性到什么程度呢？上班时间是弹性的，早上九点到十点之间随便来；下班时间也是弹性的——六点到十点之间，随便走。
+
+我入职第一天，前辈跟我传授生存法则。他说：记住三句话。第一句，领导的「顺便」，不是顺便。他说「顺便做个报表」，那个表要做三天。第二句，「很快」的意思是「还没开始」。第三句最关键——下班时，书包里永远放一件外套。
+
+我问：为什么？他说：这样你走的时候，看起来像去上厕所。
+
+我们办公室还有一个神秘生物，叫永远在线的同事。凌晨一点还在回消息，早上八点又出现在工位。我问他：你不困吗？他说：困啊。我说：那你为什么这么拼？他说：不是拼，是睡不着——一想到你们都这么拼，我就睡不着。`,
+    notes: [
+      '「弹性工作制」的对称拆解（上班弹性、下班也「弹性」）是定义歪曲式笑点',
+      '前辈三句法则用列表节奏铺垫，外套梗是全文最大包袱，解释延迟一句引爆',
+      '结尾「永远在线」同事的循环焦虑，收在一句回环台词上，干净利落'
+    ]
+  },
+  {
+    title: '《存钱大计》',
+    tag: '消费 · 叙事',
+    body: `我今年年初给自己定了个目标：存两万块。
+
+现在是八月，我存了……嗯，我先说说我买了什么吧。二月买了台咖啡机，说是以后不买外面的咖啡了；三月买了台投影仪，说是以后不看电影了；四月办了张按摩卡，说是以后不生病了。
+
+你发现规律了吗？我每一次消费，都是为了省钱。这世界上最贵的省钱方式，就是我的省钱方式。
+
+我妈知道以后，说了一句特别扎心的话：你不是存不下钱，你是舍不得让钱闲着。
+
+后来我真的想存钱了，就去找理财攻略。攻略说：记账吧，记三个月，你就知道钱花哪儿了。我真记了。记完我发现，我最大的开支，是那些「为了省钱」的支出。
+
+所以我现在学乖了。这个月我什么都没买——咖啡机在吃灰，投影仪在吃灰，按摩卡在吃灰。它们终于统一了：一起吃灰。而我的两万块……在它们的购买发票里，永垂不朽。`,
+    notes: [
+      '目标悬置法开场：先不报存款数，转而报消费清单，制造信息差',
+      '每笔消费都配一个省钱理由，重复三次形成节奏，第四句点破规律',
+      '「吃灰三连」到「永垂不朽」，用庄重词汇写琐碎事实，反差收尾'
+    ]
+  }
+];
+
+/* ============================================================
+   状态与数据层
+   ============================================================ */
 let state = {
   categories: [],
   currentCategory: null,
   currentDate: '',
-  data: {},            // data[categoryId][date] = {}
-  settings: {},        // settings[categoryId] = { checkItems: [...], ... }
-  weeklyStart: null,   // 学堂杂务 起始周日期（YYYY-MM-DD）
+  data: {},
+  settings: {},
+  weeklyStart: null,
+  schema: 1,
   categoryEditorMode: false
 };
 
@@ -767,7 +1210,6 @@ function loadState() {
     }
   } catch (e) { console.error('loadState error', e); }
 
-  // 保证默认分类
   if (!state.categories || !state.categories.length) {
     state.categories = DEFAULT_CATEGORIES.map(c => ({...c}));
   }
@@ -782,24 +1224,120 @@ function loadState() {
   if (!state.weeklyStart) {
     state.weeklyStart = todayStr();
   }
+  /* 注意：settings 的默认项初始化放在 migrateData 之后的 loadStateDefaults 中，
+     以免抢先初始化导致旧数据（checkItems 等）无法迁移 */
+}
 
-  // 给每个分类初始化默认 checkItems
-  state.categories.forEach(cat => {
-    if (!state.settings[cat.id]) state.settings[cat.id] = {};
-    if (cat.id === 'cat_shape') {
-      if (!state.settings[cat.id].exercise) {
-        state.settings[cat.id].exercise = DEFAULT_CHECKS.cat_shape.exercise.map((n, i) => ({ id: uid(), name: n, order: i }));
-      }
-    } else if (cat.id === 'cat_rui') {
-      if (!state.settings[cat.id].growth) {
-        state.settings[cat.id].growth = DEFAULT_CHECKS.cat_rui.growth.map((n, i) => ({ id: uid(), name: n, order: i }));
-      }
-    } else if (DEFAULT_CHECKS[cat.id]) {
-      if (!state.settings[cat.id].checkItems) {
-        state.settings[cat.id].checkItems = DEFAULT_CHECKS[cat.id].map((n, i) => ({ id: uid(), name: n, order: i }));
-      }
+/* 旧数据迁移（幂等，只跑一次）
+   v1 → v2：卡片化随心记/灵感/碎话、视频全局库、移除闲杂琐记
+   v2 → v3：打卡项改为按天存储（每日添加，仅当日；原固定项转为常用标签池，
+            并为历史日期固化当天清单快照，保留历史勾选记录）
+*/
+function migrateData() {
+  if (state.schema >= 3) return;
+
+  /* ---- v1 → v2 ---- */
+  if (!state.schema || state.schema < 2) {
+    // 1. 移除「闲杂琐记」模块（其历史数据仍保留在 state.data 中，导出备份可见）
+    state.categories = (state.categories || []).filter(c => c.id !== 'cat_misc');
+
+    // 2. 当前分类若已被移除，回到第一个分类
+    if (!state.categories.find(c => c.id === state.currentCategory)) {
+      state.currentCategory = state.categories[0] ? state.categories[0].id : null;
     }
-  });
+
+    if (!state.data) state.data = {};
+    if (!state.settings) state.settings = {};
+
+    // 3. 花朝知晤：thought / zhihuVideos -> cards
+    Object.keys(state.data.cat_zhihu || {}).forEach(d => {
+      const day = state.data.cat_zhihu[d];
+      if (day && !Array.isArray(day.cards)) {
+        const hasOld = (day.thought && day.thought.trim()) || (Array.isArray(day.zhihuVideos) && day.zhihuVideos.length);
+        day.cards = hasOld
+          ? [{ id: uid(), text: day.thought || '', videos: Array.isArray(day.zhihuVideos) ? day.zhihuVideos : [] }]
+          : [{ id: uid(), text: '', videos: [] }];
+      }
+    });
+
+    // 4. 故事灵感簿：title/content/storyLinks/storyImages -> inspirations
+    Object.keys(state.data.cat_story || {}).forEach(d => {
+      const day = state.data.cat_story[d];
+      if (day && !Array.isArray(day.inspirations)) {
+        const hasOld = (day.title && day.title.trim()) || (day.content && day.content.trim())
+          || (Array.isArray(day.storyLinks) && day.storyLinks.length)
+          || (Array.isArray(day.storyImages) && day.storyImages.length);
+        day.inspirations = hasOld
+          ? [{ id: uid(), title: day.title || '', content: day.content || '',
+               links: Array.isArray(day.storyLinks) ? day.storyLinks : [],
+               images: Array.isArray(day.storyImages) ? day.storyImages : [] }]
+          : [{ id: uid(), title: '', content: '', links: [], images: [] }];
+      }
+    });
+
+    // 5. 说笑备忘录：crumbs -> crumbCards
+    Object.keys(state.data.cat_joke || {}).forEach(d => {
+      const day = state.data.cat_joke[d];
+      if (day && !Array.isArray(day.crumbCards)) {
+        day.crumbCards = [{ id: uid(), text: day.crumbs || '' }];
+      }
+    });
+
+    // 6. 形色自修：各日期的 exerciseVideos / videoLink -> 全局视频库
+    if (!state.settings.cat_shape) state.settings.cat_shape = {};
+    if (!Array.isArray(state.settings.cat_shape.videos)) state.settings.cat_shape.videos = [];
+    if (!Array.isArray(state.settings.cat_shape.videoLinks)) state.settings.cat_shape.videoLinks = [];
+    Object.keys(state.data.cat_shape || {}).forEach(d => {
+      const day = state.data.cat_shape[d];
+      if (!day) return;
+      if (Array.isArray(day.exerciseVideos)) {
+        day.exerciseVideos.forEach(v => {
+          if (v && !state.settings.cat_shape.videos.includes(v)) state.settings.cat_shape.videos.push(v);
+        });
+      }
+      if (day.videoLink && !state.settings.cat_shape.videoLinks.some(l => l.url === day.videoLink)) {
+        state.settings.cat_shape.videoLinks.push({ url: day.videoLink, title: day.videoLink });
+      }
+    });
+
+    state.schema = 2;
+  }
+
+  /* ---- v2 → v3：打卡项拆为「每日固定（全局）+ 当日增项（按天）」 ---- */
+  if (state.schema === 2) {
+    const POOL = { cat_daily: 'checkItems', cat_shape: 'exercise', cat_rui: 'growth', cat_school: 'checkItems' };
+    const DONES = { cat_daily: 'checkDones', cat_shape: 'exDones', cat_rui: 'growthDones', cat_school: 'schoolDones' };
+
+    Object.keys(POOL).forEach(cid => {
+      if (!state.settings[cid]) state.settings[cid] = {};
+      const s = state.settings[cid];
+
+      // 旧固定清单 → 每日固定项（fixedItems）+ 常用标签池（commonChecks，去重）
+      if (!Array.isArray(s.fixedItems)) {
+        const old = s[POOL[cid]];
+        s.fixedItems = Array.isArray(old)
+          ? old.map(x => ({ id: x.id || uid(), name: x.name || '' })).filter(x => x.name)
+          : [];
+      }
+      if (!Array.isArray(s.commonChecks)) {
+        s.commonChecks = s.fixedItems.map(x => ({ id: x.id, name: x.name }));
+      }
+
+      // 每个历史日期：勾选记录迁移为统一的 dayDones（旧字段保留兼容）
+      // （固定项每天自动出现，无需快照；旧的当日勾选直接转为 dayDones）
+      const dates = state.data[cid] || {};
+      Object.keys(dates).forEach(d => {
+        const day = dates[d];
+        if (!day) return;
+        if (!Array.isArray(day.extraItems)) day.extraItems = [];
+        const od = day[DONES[cid]];
+        if (od && !day.dayDones) day.dayDones = od;
+      });
+    });
+
+    state.schema = 3;
+  }
+
   saveState();
 }
 
@@ -849,6 +1387,25 @@ function ensureData(catId, dateStr) {
   return state.data[catId][dateStr];
 }
 
+/* 卡片数据（当天） */
+function newCard(cid) {
+  if (cid === 'cat_zhihu') return { id: uid(), text: '', videos: [] };
+  if (cid === 'cat_story') return { id: uid(), title: '', content: '', links: [], images: [] };
+  return { id: uid(), text: '' };
+}
+function getDeckCards(cid) {
+  const key = DECK_KEYS[cid];
+  if (!key) return null;
+  const data = ensureData(cid, state.currentDate);
+  if (!Array.isArray(data[key])) data[key] = [newCard(cid)];
+  if (!data[key].length) data[key].push(newCard(cid));
+  return data[key];
+}
+function findCard(cid, cardId) {
+  const cards = getDeckCards(cid);
+  return cards ? (cards.find(c => c.id === cardId) || null) : null;
+}
+
 /* ============================================================
    渲染：左侧导航
    ============================================================ */
@@ -891,7 +1448,6 @@ function renderNav() {
       }
       state.currentCategory = cat.id;
       saveState();
-      // 切换分类后自动收起侧栏
       closeSidebar();
       renderNav();
       renderContent();
@@ -918,7 +1474,7 @@ function deleteCategory(cat) {
   delete state.data[cat.id];
   delete state.settings[cat.id];
   if (state.currentCategory === cat.id) {
-    state.currentCategory = state.categories[0]?.id || null;
+    state.currentCategory = state.categories[0] ? state.categories[0].id : null;
   }
   saveState();
   renderNav();
@@ -936,7 +1492,7 @@ function openCategoryEditor(cat) {
     <div class="field">
       <label>选择图标</label>
       <div class="icon-picker" id="iconPicker">
-        ${['🌿','🌸','🌱','🍃','📖','📜','✨','🌾','🎭','🌷','🌻','🌼','🍀','🌳','🌲','🌵','🍂','🍁','🌙','⭐','🌟','💫','🪴','🪷','🌺','🌹','🌝','🌞','🌈','🕊','🦋','🐝','🐞','📝','📒','📓','📔','🖊','🖌','🎨','🧵','🍵','🫖','🪷','🌌','🏔','🌊'].map(ic => `<button data-ic="${ic}">${ic}</button>`).join('')}
+        ${['🌿','🌸','🌱','🍃','📖','📜','✨','🎭','🌷','🌻','🌼','🍀','🌳','🌲','🌵','🍂','🍁','🌙','⭐','🌟','💫','🪴','🪷','🌺','🌹','🌝','🌞','🌈','🕊','🦋','🐝','🐞','📝','📒','📓','📔','🖊','🖌','🎨','🧵','🍵','🫖','🌌','🏔','🌊'].map(ic => `<button data-ic="${ic}">${ic}</button>`).join('')}
       </div>
     </div>
     <div class="actions">
@@ -991,8 +1547,6 @@ function renderContent() {
   titleEl.textContent = cat.name;
   dateEl.textContent = formatDateCN(state.currentDate);
 
-  // 侧栏由顶部菜单按钮或点击内容区控制，这里不做自动隐藏
-
   const renderer = RENDERERS[cat.id] || renderGeneric;
   content.innerHTML = renderer(cat);
   bindContentEvents(cat);
@@ -1034,7 +1588,7 @@ function renderCheckList(items, dateData, key) {
   </ul>`;
 }
 
-function renderImageGrid(images) {
+function renderImageGrid(images, addKey) {
   if (!Array.isArray(images)) images = [];
   return `<div class="image-grid">
     ${images.map((src, i) => `
@@ -1045,16 +1599,16 @@ function renderImageGrid(images) {
         </button>
       </div>
     `).join('')}
-    <label class="image-add" id="imgAddBtn">
+    <label class="image-add" data-act="add-img" ${addKey ? `data-img-key="${addKey}"` : ''}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span>添加图片</span>
     </label>
   </div>`;
 }
 
-function renderLinkList(links) {
+function renderLinkList(links, rmAct) {
   if (!Array.isArray(links)) links = [];
-  if (!links.length) return `<div class="empty">还没有添加任何文件或链接</div>`;
+  if (!links.length) return `<div class="empty">还没有添加任何链接</div>`;
   return `<div class="link-list">
     ${links.map((l, i) => `
       <div class="link-row" data-i="${i}">
@@ -1062,12 +1616,68 @@ function renderLinkList(links) {
           <div class="title">${escapeHTML(l.title || (l.type === 'image' ? '图片' : '链接'))}</div>
           <div class="url">${escapeHTML(l.url || '')}</div>
         </div>
-        <button class="rm" data-act="rm-link">
+        <a class="btn warm" style="padding:5px 12px;font-size:12px" href="${escapeHTML(l.url || '#')}" target="_blank" rel="noopener">打开</a>
+        <button class="rm" data-act="${rmAct || 'rm-link'}" data-i="${i}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </div>
     `).join('')}
   </div>`;
+}
+
+/* 每日打卡区块：每日固定项（全局，每天出现）+ 当日增项（仅当天）+ 添加行 + 常用标签
+   - 固定项存 settings.fixedItems，每天自动出现（未勾选）
+   - 当日增项存 data[date].extraItems，只今天显示，次日清空
+   - 勾选状态统一存 data[date].dayDones（按天，不影响其他日期）
+*/
+function renderDailyCheckSection(cid, opts) {
+  opts = opts || {};
+  const data = ensureData(cid, state.currentDate);
+  const fixed = (state.settings[cid] || {}).fixedItems || [];
+  const extra = Array.isArray(data.extraItems) ? data.extraItems : [];
+  const pool = (state.settings[cid] || {}).commonChecks || [];
+  const extraNames = extra.map(i => i.name);
+  const allNames = fixed.map(i => i.name).concat(extraNames);
+  const fixedHtml = fixed.length
+    ? `<div class="check-sub">每日固定</div>${renderCheckList(fixed, data, 'dayDones')}`
+    : `<div class="empty">还没有每日固定项——在下面输入并设为固定，或点常用标签加入今天</div>`;
+  const extraHtml = extra.length
+    ? `<div class="check-sub">今日增项（仅当天）</div>${renderCheckList(extra, data, 'dayDones')}`
+    : '';
+  return `
+    ${fixedHtml}
+    ${extraHtml}
+    <div class="add-row">
+      <input type="text" data-input="newDayItem" placeholder="${opts.placeholder || '添加打卡项，回车加入今天…'}" />
+      <button data-act="quick-check" title="加入今天（仅当天）">＋今日</button>
+      <button data-act="add-fixed" title="设为每日固定项">＋固定</button>
+    </div>
+    ${pool.length ? `
+      <div class="chips-row">
+        <span class="chips-label">常用</span>
+        ${pool.map(c => `<span class="chip${allNames.includes(c.name) ? ' added' : ''}" data-act="add-common" data-pid="${c.id}" title="点击加入今天的清单">${escapeHTML(c.name)}</span>`).join('')}
+      </div>
+    ` : ''}
+    <p class="hint">${opts.hint || '「＋今日」加入的项仅当天显示，次日自动清空；「＋固定」设为每日固定项，之后每天都会出现。勾选记录按天独立保存。'}</p>
+  `;
+}
+
+/* 左右滑动卡片容器 */
+function swipeDeck(cid, cards, renderFn) {
+  return `
+    <div class="swipe-deck" data-deck="${cid}">
+      <div class="swipe-track">
+        ${cards.map((c, i) => `<div class="swipe-card" data-card-id="${c.id}">${renderFn(c, i, cards.length)}</div>`).join('')}
+      </div>
+      <div class="swipe-foot">
+        <button class="swipe-arrow" data-arrow="-1" aria-label="上一张">‹</button>
+        <div class="swipe-dots">
+          ${cards.map((c, i) => `<span class="swipe-dot${i === 0 ? ' on' : ''}" data-goto="${i}" title="第 ${i + 1} 条"></span>`).join('')}
+          <span class="swipe-dot add" data-act="add-card" title="新增一条">＋</span>
+        </div>
+        <button class="swipe-arrow" data-arrow="1" aria-label="下一张">›</button>
+      </div>
+    </div>`;
 }
 
 function toast(msg) {
@@ -1093,26 +1703,34 @@ const RENDERERS = {
   /* 1. 日常履记 */
   cat_daily(cat) {
     const data = ensureData(cat.id, state.currentDate);
-    const items = state.settings[cat.id].checkItems || [];
+    const fixed = (state.settings[cat.id] || {}).fixedItems || [];
+    const extra = Array.isArray(data.extraItems) ? data.extraItems : [];
+    const items = fixed.concat(extra);
+    const dones = data.dayDones || {};
+    const total = items.length;
+    const done = items.filter(i => dones[i.id]).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const streak = computeStreak(cat.id);
     return `
       <div class="section">
-        <h3 class="section-title">每日打卡
-          <span class="actions">
-            <button data-act="add-check" title="新增打卡项">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </span>
-        </h3>
-        ${renderCheckList(items, data, 'checkDones')}
-        <div class="add-row">
-          <input type="text" data-input="newCheck" placeholder="新增打卡项…" />
-          <button data-act="quick-add">＋</button>
+        <div class="ov-row">
+          <div class="ov-left">
+            <span class="ov-label">今日完成</span>
+            <span class="ov-num">${done}/${total}${total ? ' · ' + pct + '%' : ''}</span>
+            <div class="ov-bar"><i style="width:${pct}%"></i></div>
+          </div>
+          <div class="ov-streak" title="连续「当日清单全部完成」的天数">🔥 连续 ${streak} 天</div>
         </div>
       </div>
 
       <div class="section">
+        <h3 class="section-title">今日打卡（仅当天）</h3>
+        ${renderDailyCheckSection(cat.id)}
+      </div>
+
+      <div class="section">
         <h3 class="section-title">今日随记（图片）</h3>
-        ${renderImageGrid(data.images || [])}
+        ${renderImageGrid(data.images || [], 'images')}
         <div class="add-row" style="margin-top:14px">
           <textarea class="textarea" data-input="note" placeholder="今日文字随记…">${escapeHTML(data.note || '')}</textarea>
         </div>
@@ -1124,7 +1742,9 @@ const RENDERERS = {
   cat_shape(cat) {
     const data = ensureData(cat.id, state.currentDate);
     const h = data.health || {};
-    const ex = state.settings[cat.id].exercise || [];
+    const lib = state.settings[cat.id].videos || [];
+    const libLinks = state.settings[cat.id].videoLinks || [];
+    const vdones = data.videoDones || {};
     return `
       <div class="section">
         <h3 class="section-title">健康记录</h3>
@@ -1160,11 +1780,11 @@ const RENDERERS = {
             <input type="text" data-input="health.weight" value="${escapeHTML(h.weight || '')}" placeholder="如 50.5" />
           </div>
           <div class="form-field">
-            <label>腰围 (cm)</label>
+            <label>腰围</label>
             <input type="text" data-input="health.waist" value="${escapeHTML(h.waist || '')}" placeholder="如 65" />
           </div>
           <div class="form-field">
-            <label>臀围 (cm)</label>
+            <label>臀围</label>
             <input type="text" data-input="health.hip" value="${escapeHTML(h.hip || '')}" placeholder="如 90" />
           </div>
           <div class="form-field">
@@ -1179,45 +1799,43 @@ const RENDERERS = {
       </div>
 
       <div class="section">
-        <h3 class="section-title">运动打卡
-          <span class="actions">
-            <button data-act="add-ex" title="新增运动项">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </span>
-        </h3>
-        ${renderCheckList(ex, data, 'exDones')}
+        <h3 class="section-title">运动打卡（仅当天）</h3>
+        ${renderDailyCheckSection(cat.id, { placeholder: '添加今天的运动项，回车加入…' })}
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">跟练视频库（每日共享）</h3>
+        <p class="hint" style="margin:0 0 8px 0">视频库为全局共享：每天都会出现在这里，随时播放。可勾选标记「今日跟练」；添加或删除任一视频，都不影响其他视频与历史记录。</p>
+        <label class="video-add" data-act="add-lib-video">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="16 9 22 6 22 18 16 15" fill="currentColor" stroke="none"/></svg>
+          <span>＋ 添加跟练视频（支持多个、长视频）</span>
+        </label>
         <div class="add-row">
-          <input type="text" data-input="newEx" placeholder="新增运动项…" />
-          <button data-act="quick-ex">＋</button>
+          <input type="text" data-lib-link-input placeholder="或粘贴视频链接（抖音/B站等），回车添加…" />
+          <button data-act="add-lib-link">＋</button>
         </div>
-        <div class="form-field full" style="margin-top:14px">
-          <label>跟练视频（可上传多个，支持 20 分钟以上长视频）</label>
-          <label class="video-add" id="exVideoBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="16 9 22 6 22 18 16 15" fill="currentColor" stroke="none"/></svg>
-            <span>＋ 添加跟练视频</span>
-          </label>
-          <input type="text" data-input="videoLink" value="${escapeHTML(data.videoLink || '')}" placeholder="或粘贴视频链接（抖音/B站等）…" style="margin-top:8px" />
-          ${(data.exerciseVideos && data.exerciseVideos.length) ? `
-            <div class="video-list">
-              ${data.exerciseVideos.map((vid, i) => `
-                <div class="video-item">
-                  <video controls preload="metadata" data-vid="${escapeHTML(vid)}"></video>
-                  <button class="mini-btn danger" data-act="rm-ex-video" data-vid-index="${i}" style="margin-top:6px">删除此视频</button>
+        ${lib.length ? `
+          <div class="video-list">
+            ${lib.map(vid => `
+              <div class="video-item">
+                <video controls preload="metadata" data-vid="${escapeHTML(vid)}"></video>
+                <div class="video-foot">
+                  <span class="vcheck ${vdones[vid] ? 'on' : ''}" data-act="toggle-lib-video" data-v="${escapeHTML(vid)}">今日跟练</span>
+                  <button class="mini-btn" data-act="rm-lib-video" data-v="${escapeHTML(vid)}">删除</button>
                 </div>
-              `).join('')}
-            </div>
-          ` : ''}
-          ${data.videoLink ? `<a class="btn warm" style="margin-top:8px;display:inline-block" href="${escapeHTML(data.videoLink)}" target="_blank" rel="noopener">▶ 打开链接视频</a>` : ''}
-          <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">视频存在本机，可添加多个、逐个删除；数据备份的 JSON 不含视频，换机时视频留原设备。</p>
-        </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div class="empty">视频库还是空的，添加一条开始跟练吧</div>`}
+        ${libLinks.length ? renderLinkList(libLinks, 'rm-lib-link') : ''}
+        <p class="hint">视频存在本机，数据备份的 JSON 不含视频文件，换机时视频留原设备。</p>
       </div>
 
       <div class="section">
         <h3 class="section-title">护肤记录</h3>
         <textarea class="textarea tall" data-input="skincare" placeholder="今日护肤步骤、皮肤状态、用了哪些产品…">${escapeHTML(data.skincare || '')}</textarea>
         <h3 class="section-title" style="margin-top:18px">护肤图记</h3>
-        ${renderImageGrid(data.skincareImages || [])}
+        ${renderImageGrid(data.skincareImages || [], 'skincareImages')}
       </div>
     `;
   },
@@ -1226,47 +1844,28 @@ const RENDERERS = {
   cat_rui(cat) {
     const data = ensureData(cat.id, state.currentDate);
     const r = data.records || {};
-    const growth = state.settings[cat.id].growth || [];
     return `
       <div class="section">
-        <h3 class="section-title">成长日记
-          <span class="actions">
-            <button data-act="add-growth" title="新增打卡项">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </span>
-        </h3>
-        <p style="margin:0 0 10px 0;font-size:13px;color:var(--ink-500)">完成后划掉，不删除内容。手写成长日记：</p>
-        ${renderCheckList(growth, data, 'growthDones')}
-        <div class="add-row">
-          <input type="text" data-input="newGrowth" placeholder="新增成长打卡项…" />
-          <button data-act="quick-growth">＋</button>
-        </div>
+        <h3 class="section-title">成长日记（仅当天）</h3>
+        ${renderDailyCheckSection(cat.id, { placeholder: '添加今天的成长打卡项，回车加入…' })}
       </div>
 
       <div class="section">
         <h3 class="section-title">日常记录（身高体重等）</h3>
         <div class="form-grid">
-          <div class="form-field"><label>身高 (cm)</label><input type="text" data-input="height" value="${escapeHTML(r.height || '')}" /></div>
-          <div class="form-field"><label>体重 (kg)</label><input type="text" data-input="ruiWeight" value="${escapeHTML(r.ruiWeight || '')}" /></div>
+          <div class="form-field"><label>身高</label><input type="text" data-input="height" value="${escapeHTML(r.height || '')}" /></div>
+          <div class="form-field"><label>体重</label><input type="text" data-input="ruiWeight" value="${escapeHTML(r.ruiWeight || '')}" /></div>
           <div class="form-field"><label>今日奶量 / 饮食</label><input type="text" data-input="diet" value="${escapeHTML(r.diet || '')}" /></div>
           <div class="form-field"><label>睡眠</label><input type="text" data-input="sleep" value="${escapeHTML(r.sleep || '')}" placeholder="几点睡到几点" /></div>
           <div class="form-field full"><label>其他观察</label><textarea data-input="observe">${escapeHTML(r.observe || '')}</textarea></div>
         </div>
         <h3 class="section-title" style="margin-top:18px">成长图记</h3>
-        ${renderImageGrid(data.photos || [])}
+        ${renderImageGrid(data.photos || [], 'photos')}
       </div>
 
       <div class="section">
-        <h3 class="section-title">成长有话说
-          <span class="actions">
-            <button data-act="add-talk" title="新增一条">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </span>
-        </h3>
+        <h3 class="section-title">成长有话说</h3>
         <textarea class="textarea tall" data-input="talk" placeholder="把想对芮芮说的话，点点滴滴都记在这里。内容多时支持滚动…">${escapeHTML(data.talk || '')}</textarea>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">支持长文滚动记录，每日内容自动留存。</p>
       </div>
     `;
   },
@@ -1274,29 +1873,16 @@ const RENDERERS = {
   /* 4. 花朝知晤 */
   cat_zhihu(cat) {
     const data = ensureData(cat.id, state.currentDate);
+    const cards = getDeckCards(cat.id);
     return `
       <div class="section">
-        <h3 class="section-title">随心记</h3>
-        <textarea class="textarea tall" data-input="thought" placeholder="此刻想到了什么？把灵感与感悟写下来…">${escapeHTML(data.thought || '')}</textarea>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">随心视频（可上传多个，支持 20 分钟以上长视频）</h3>
-        <label class="video-add" id="zhihuVideoBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="16 9 22 6 22 18 16 15" fill="currentColor" stroke="none"/></svg>
-          <span>＋ 添加视频</span>
-        </label>
-        ${(data.zhihuVideos && data.zhihuVideos.length) ? `
-          <div class="video-list">
-            ${data.zhihuVideos.map((vid, i) => `
-              <div class="video-item">
-                <video controls preload="metadata" data-vid="${escapeHTML(vid)}"></video>
-                <button class="mini-btn danger" data-act="rm-zhihu-video" data-vid-index="${i}" style="margin-top:6px">删除此视频</button>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">视频存在本机，可添加多个、逐个删除；数据备份的 JSON 不含视频。</p>
+        <h3 class="section-title">随心记（左右滑动 · 可多条）
+          <span class="actions">
+            <button data-act="add-card" title="新增一条随心记">＋</button>
+          </span>
+        </h3>
+        ${swipeDeck(cat.id, cards, renderZhihuCard)}
+        <p class="hint">左右滑动查看多条随心记；点 ＋ 新增一条，每条都可单独插入多个视频，互不影响。</p>
       </div>
 
       <div class="section">
@@ -1307,7 +1893,7 @@ const RENDERERS = {
           <button class="btn" data-act="copy-zhihu">复制结果</button>
           <button class="btn warm" data-act="clear-zhihu">清空</button>
         </div>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">点击「AI 草稿」会基于你的随心记，生成适合口播的开头+正文+结尾结构，可继续编辑修改。</p>
+        <p class="hint">点击「AI 草稿」会基于你今天的所有随心记，生成适合口播的开头+正文+结尾结构，可继续编辑修改。</p>
       </div>
     `;
   },
@@ -1315,7 +1901,6 @@ const RENDERERS = {
   /* 5. 学堂杂务 */
   cat_school(cat) {
     const data = ensureData(cat.id, state.currentDate);
-    const items = state.settings[cat.id].checkItems || [];
     const wk = computeWeek(state.weeklyStart, state.currentDate);
     return `
       <div class="section">
@@ -1334,22 +1919,12 @@ const RENDERERS = {
             <textarea id="weekFocus" placeholder="这周要重点突破的事情…">${escapeHTML(data.weekFocus || '')}</textarea>
           </div>
         </div>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">当前：${wk.label}</p>
+        <p class="hint">当前：${wk.label}</p>
       </div>
 
       <div class="section">
-        <h3 class="section-title">日常打卡
-          <span class="actions">
-            <button data-act="add-school" title="新增打卡">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </span>
-        </h3>
-        ${renderCheckList(items, data, 'schoolDones')}
-        <div class="add-row">
-          <input type="text" data-input="newSchool" placeholder="新增打卡项…" />
-          <button data-act="quick-school">＋</button>
-        </div>
+        <h3 class="section-title">日常打卡（仅当天）</h3>
+        ${renderDailyCheckSection(cat.id, { placeholder: '添加今天的打卡项，回车加入…' })}
       </div>
     `;
   },
@@ -1365,21 +1940,19 @@ const RENDERERS = {
       </div>
 
       <div class="section">
-        <h3 class="section-title">公众号素材（链接 / 图片 / 文件）</h3>
+        <h3 class="section-title">公众号素材（链接 / 图片）</h3>
         <div class="add-row">
           <input type="text" id="pubLinkInput" placeholder="粘贴链接…" />
           <input type="text" id="pubLinkTitle" placeholder="标题（可选）" />
-          <button data-act="add-link" data-target="pub">＋</button>
+          <button data-act="add-pub-link">＋</button>
         </div>
-        <div style="margin-top:10px">
-          <label class="image-add" style="aspect-ratio:auto;padding:14px;display:flex;flex-direction:row;gap:6px;align-items:center;justify-content:center;width:100%">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>添加图片</span>
-          </label>
-        </div>
+        <label class="image-add row" data-act="add-img" data-img-key="pubImages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>添加图片</span>
+        </label>
         <h3 class="section-title" style="margin-top:14px">素材列表</h3>
-        ${renderImageGrid(data.pubImages || [])}
-        ${renderLinkList(data.pubLinks || [])}
+        ${renderImageGrid(data.pubImages || [], 'pubImages')}
+        ${renderLinkList(data.pubLinks || [], 'rm-pub-link')}
         <div class="form-field full" style="margin-top:14px">
           <label>完整公众号预览</label>
           <div class="ai-box" style="min-height:140px">${renderPubPreview(data)}</div>
@@ -1390,111 +1963,117 @@ const RENDERERS = {
 
   /* 7. 故事灵感簿 */
   cat_story(cat) {
-    const data = ensureData(cat.id, state.currentDate);
+    const cards = getDeckCards(cat.id);
     return `
       <div class="section">
-        <h3 class="section-title">我的灵感</h3>
-        <input type="text" data-input="title" value="${escapeHTML(data.title || '')}" placeholder="故事标题 / 灵感主题" style="width:100%;border:1px solid var(--ink-200);border-radius:10px;padding:9px 12px;font-size:15px;margin-bottom:10px" />
-        <textarea class="textarea tall" data-input="content" placeholder="人物、片段、情节、金句…想到就记下来">${escapeHTML(data.content || '')}</textarea>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">素材（链接 / 图片 / 文件）</h3>
-        <div class="add-row">
-          <input type="text" id="storyLinkInput" placeholder="粘贴链接…" />
-          <input type="text" id="storyLinkTitle" placeholder="标题（可选）" />
-          <button data-act="add-link" data-target="story">＋</button>
-        </div>
-        <div style="margin-top:10px">
-          <label class="image-add" style="aspect-ratio:auto;padding:14px;display:flex;flex-direction:row;gap:6px;align-items:center;justify-content:center;width:100%">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>添加图片</span>
-          </label>
-        </div>
-        <h3 class="section-title" style="margin-top:14px">素材列表</h3>
-        ${renderImageGrid(data.storyImages || [])}
-        ${renderLinkList(data.storyLinks || [])}
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">AI 润色（故事成稿）</h3>
-        <div class="ai-box" id="aiBoxStory">${escapeHTML(data.storyPolish || '')}</div>
-        <div class="ai-actions">
-          <button class="btn primary" data-act="ai-story">AI 草稿</button>
-          <button class="btn" data-act="copy-story">复制结果</button>
-          <button class="btn warm" data-act="clear-story">清空</button>
-        </div>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">点击「AI 草稿」会基于你的灵感内容，生成带题目 / 情节脉络 / 金句结构的成稿，可继续编辑修改。</p>
-      </div>
-    `;
-  },
-
-  /* 8. 闲杂琐记 */
-  cat_misc(cat) {
-    const data = ensureData(cat.id, state.currentDate);
-    const items = state.settings[cat.id].checkItems || [];
-    return `
-      <div class="section">
-        <h3 class="section-title">浮生杂事
+        <h3 class="section-title">灵感簿（左右滑动 · 可多条）
           <span class="actions">
-            <button data-act="add-misc" title="新增">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            <button data-act="add-card" title="新增一条灵感">＋</button>
           </span>
         </h3>
-        ${renderCheckList(items, data, 'miscDones')}
-        <div class="add-row">
-          <input type="text" data-input="newMisc" placeholder="新增杂事项…" />
-          <button data-act="quick-misc">＋</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">心情日记</h3>
-        <textarea class="textarea tall" data-input="mood" placeholder="今天心情如何？把心情写下来…">${escapeHTML(data.mood || '')}</textarea>
-        <h3 class="section-title" style="margin-top:18px">心情相册</h3>
-        ${renderImageGrid(data.moodImages || [])}
+        ${swipeDeck(cat.id, cards, renderStoryCard)}
+        <p class="hint">左右滑动查看多条灵感；点 ＋ 新增一条，每条都可单独插入链接与图片，互不影响。</p>
       </div>
     `;
   },
 
-  /* 9. 说笑备忘录 */
+  /* 8. 说笑备忘录 */
   cat_joke(cat) {
     const data = ensureData(cat.id, state.currentDate);
+    const cards = getDeckCards(cat.id);
+    const s = getDailyScript(state.currentDate, data.scriptOverride);
     return `
       <div class="section">
-        <h3 class="section-title">每日脱口秀
+        <h3 class="section-title">每日一篇 · 脱口秀文稿
           <span class="actions">
-            <button data-act="ai-talk" title="AI 生成">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>
-            </button>
+            <button data-act="change-script" title="换一篇">🎲 换一篇</button>
           </span>
         </h3>
-        <div class="ai-box" id="aiBoxJoke">${escapeHTML(data.dailyTalk || '')}</div>
-        <div class="ai-actions">
-          <button class="btn primary" data-act="ai-joke-daily">生成今日脱口秀</button>
-          <button class="btn" data-act="copy-joke">复制</button>
+        <div class="script-box">
+          <div class="script-head">
+            <span class="script-tag"># ${escapeHTML(s.tag)}</span>
+            <span class="script-date">${formatDateShort(state.currentDate)} · 今日推荐</span>
+          </div>
+          <h4 class="script-title">${escapeHTML(s.title)}</h4>
+          <div class="script-body">${escapeHTML(s.body)}</div>
+          <details class="script-notes">
+            <summary>✍️ 结构拆解 · 学习要点</summary>
+            <ul>${s.notes.map(n => `<li>${escapeHTML(n)}</li>`).join('')}</ul>
+          </details>
         </div>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">每天可生成一篇适合作为脱口秀的稿件（基于生活/职场/情感类话题），可继续编辑修改。</p>
+        <p class="hint">每天自动推荐一篇文稿（同一天内容固定，方便精读）；点「换一篇」可随机更换。展开拆解可看这篇稿子的写法要点。</p>
       </div>
 
       <div class="section">
-        <h3 class="section-title">即兴碎话本</h3>
-        <textarea class="textarea tall" data-input="crumbs" placeholder="把零碎的好笑片段、灵感都先记在这里…">${escapeHTML(data.crumbs || '')}</textarea>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">AI 完善的脱口秀稿件</h3>
-        <div class="ai-box" id="aiBoxJokeFull">${escapeHTML(data.fullTalk || '')}</div>
-        <div class="ai-actions">
-          <button class="btn primary" data-act="ai-joke-full">AI 完善</button>
-          <button class="btn" data-act="copy-joke-full">复制</button>
-        </div>
-        <p style="font-size:12px;color:var(--ink-500);margin:8px 0 0 0">基于你的碎话本，扩写为一篇有完整起承转合的脱口秀稿件。</p>
+        <h3 class="section-title">即兴碎话本（左右滑动 · 可多条）
+          <span class="actions">
+            <button data-act="add-card" title="新增一条碎话">＋</button>
+          </span>
+        </h3>
+        ${swipeDeck(cat.id, cards, renderJokeCard)}
       </div>
     `;
   }
 };
+
+/* --- 卡片内部渲染 --- */
+function renderZhihuCard(c, i, n) {
+  const vids = Array.isArray(c.videos) ? c.videos : [];
+  return `
+    <div class="card-head">
+      <span class="card-tag">随记 ${i + 1} / ${n}</span>
+      <button class="card-del" data-act="del-card" title="删除这条">×</button>
+    </div>
+    <textarea class="textarea" data-card-input="text" placeholder="此刻想到了什么？把灵感与感悟写下来…">${escapeHTML(c.text || '')}</textarea>
+    ${vids.length ? `
+      <div class="video-list">
+        ${vids.map(v => `
+          <div class="video-item">
+            <video controls preload="metadata" data-vid="${escapeHTML(v)}"></video>
+            <button class="mini-btn" data-act="rm-card-video" data-v="${escapeHTML(v)}" style="margin-top:6px">删除此视频</button>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+    <label class="video-add sm" data-act="add-card-video">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="16 9 22 6 22 18 16 15" fill="currentColor" stroke="none"/></svg>
+      <span>＋ 插入视频（可多个）</span>
+    </label>
+  `;
+}
+
+function renderStoryCard(c, i, n) {
+  const links = Array.isArray(c.links) ? c.links : [];
+  const imgs = Array.isArray(c.images) ? c.images : [];
+  return `
+    <div class="card-head">
+      <span class="card-tag">灵感 ${i + 1} / ${n}</span>
+      <button class="card-del" data-act="del-card" title="删除这条">×</button>
+    </div>
+    <input type="text" class="card-title" data-card-input="title" value="${escapeHTML(c.title || '')}" placeholder="故事标题 / 灵感主题" />
+    <textarea class="textarea" data-card-input="content" placeholder="人物、片段、情节、金句…想到就记下来">${escapeHTML(c.content || '')}</textarea>
+    <div class="add-row">
+      <input type="text" placeholder="粘贴链接，回车或点＋添加…" data-card-link-input>
+      <button data-act="card-add-link">＋</button>
+    </div>
+    ${links.length ? renderLinkList(links, 'rm-card-link') : ''}
+    <label class="image-add row" data-act="card-add-img">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>＋ 添加图片（可多张）</span>
+    </label>
+    ${imgs.length ? renderImageGrid(imgs) : ''}
+  `;
+}
+
+function renderJokeCard(c, i, n) {
+  return `
+    <div class="card-head">
+      <span class="card-tag">碎话 ${i + 1} / ${n}</span>
+      <button class="card-del" data-act="del-card" title="删除这条">×</button>
+    </div>
+    <textarea class="textarea" data-card-input="text" placeholder="零碎的好笑片段、梗、对话、观察…先记在这里">${escapeHTML(c.text || '')}</textarea>
+  `;
+}
 
 function renderPubPreview(data) {
   let s = '';
@@ -1512,13 +2091,13 @@ function renderGeneric(cat) {
 }
 
 /* ============================================================
-   事件绑定（每个分类的交互）
+   事件绑定
    ============================================================ */
 function bindContentEvents(cat) {
   const content = document.getElementById('content');
   const cid = cat.id;
 
-  // 通用：勾选 / 编辑 / 上下移 / 删除（check-list）
+  /* 通用：勾选 / 编辑 / 上下移 / 删除（check-list） */
   content.querySelectorAll('.check-item').forEach(li => {
     const id = li.dataset.id;
     li.addEventListener('click', (e) => {
@@ -1536,7 +2115,7 @@ function bindContentEvents(cat) {
     });
   });
 
-  // 通用：input/textarea 自动保存（防抖）
+  /* 通用：input/textarea 自动保存（防抖） */
   content.querySelectorAll('[data-input]').forEach(el => {
     const key = el.dataset.input;
     el.addEventListener('input', debounce(() => {
@@ -1547,106 +2126,215 @@ function bindContentEvents(cat) {
     });
   });
 
-  // 通用：图片添加
-  const imgAdd = content.querySelector('#imgAddBtn');
-  if (imgAdd) {
-    imgAdd.addEventListener('click', () => triggerImageAdd(cid, defaultImgKey(cid)));
-  }
-  // 分类里的图片 add 按钮（image-add 第二处）
-  content.querySelectorAll('.image-add').forEach(btn => {
-    if (btn.id === 'imgAddBtn') return;
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const target = btn.closest('div')?.parentElement;
-      // 推断图片key
-      const sec = btn.closest('.section');
-      let key = defaultImgKey(cid);
-      if (cid === 'cat_pub' && sec && sec.querySelector('[data-input="content"]')) key = 'pubImages';
-      if (cid === 'cat_story' && sec && sec.querySelector('[data-input="content"]')) key = 'storyImages';
-      if (cid === 'cat_joke') return; // 脱口秀分类没有图片
-      if (cid === 'cat_misc' && sec && sec.querySelector('[data-input="mood"]')) key = 'moodImages';
-      if (cid === 'cat_rui' && sec && sec.querySelector('[data-input="height"]')) key = 'photos';
-      if (cid === 'cat_shape' && sec && sec.querySelector('[data-input="skincare"]')) key = 'skincareImages';
-      triggerImageAdd(cid, key);
+  /* 通用：快速新增「今日增项」（仅当天）按钮 + 回车 */
+  content.querySelectorAll('[data-act="quick-check"]').forEach(b => {
+    b.addEventListener('click', () => {
+      const input = content.querySelector('[data-input="newDayItem"]');
+      if (input && input.value.trim()) {
+        addDayItem(cid, input.value.trim());
+        input.value = '';
+      }
+    });
+  });
+  /* 通用：设为「每日固定项」按钮 */
+  content.querySelectorAll('[data-act="add-fixed"]').forEach(b => {
+    b.addEventListener('click', () => {
+      const input = content.querySelector('[data-input="newDayItem"]');
+      if (input && input.value.trim()) {
+        addFixedItem(cid, input.value.trim());
+        input.value = '';
+      }
+    });
+  });
+  content.querySelectorAll('.add-row input[data-input]').forEach(inp => {
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const btn = inp.parentElement.querySelector('button[data-act="quick-check"]');
+        if (btn) btn.click();
+      }
     });
   });
 
-  // 图片删除
+  /* 通用：常用标签一键加入今日增项 */
+  content.querySelectorAll('[data-act="add-common"]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const pool = (state.settings[cid] || {}).commonChecks || [];
+      const p = pool.find(x => x.id === chip.dataset.pid);
+      if (p) addDayItem(cid, p.name);
+    });
+  });
+
+  /* 通用：图片添加（非卡片区） */
+  content.querySelectorAll('[data-act="add-img"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerImageAdd(cid, btn.dataset.imgKey || defaultImgKey(cid));
+    });
+  });
+
+  /* 通用：图片删除（区分卡片内 / 普通区） */
   content.querySelectorAll('.image-card [data-act="rm-img"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const card = btn.closest('.image-card');
-      const i = parseInt(card.dataset.i, 10);
-      removeImage(cid, defaultImgKey(cid), i);
+      const i = parseInt(btn.closest('.image-card').dataset.i, 10);
+      const cardEl = btn.closest('.swipe-card[data-card-id]');
+      if (cardEl) removeCardImage(cid, cardEl.dataset.cardId, i);
+      else removeImage(cid, defaultImgKey(cid), i);
     });
   });
 
-  // 链接/文件删除
-  content.querySelectorAll('[data-act="rm-link"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const row = btn.closest('.link-row');
-      const i = parseInt(row.dataset.i, 10);
-      removeLink(cid, i);
-    });
-  });
+  /* ---- 卡片模块（花朝知晤 / 故事灵感簿 / 说笑备忘录） ---- */
+  if (DECK_KEYS[cid]) {
+    // 滑动 / 箭头 / 指示点
+    content.querySelectorAll('.swipe-deck').forEach(deck => bindSwipeDeck(deck));
 
-  // 链接添加
-  content.querySelectorAll('[data-act="add-link"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.target;
-      const urlIn = content.querySelector(target === 'pub' ? '#pubLinkInput' : '#storyLinkInput');
-      const titleIn = content.querySelector(target === 'pub' ? '#pubLinkTitle' : '#storyLinkTitle');
+    // 新增卡片
+    content.querySelectorAll('[data-act="add-card"]').forEach(b => {
+      b.addEventListener('click', () => addCard(cid));
+    });
+
+    // 删除卡片
+    content.querySelectorAll('[data-act="del-card"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const cardEl = b.closest('[data-card-id]');
+        if (cardEl) deleteCard(cid, cardEl.dataset.cardId);
+      });
+    });
+
+    // 卡片内文本输入
+    content.querySelectorAll('[data-card-input]').forEach(el => {
+      const cardEl = el.closest('[data-card-id]');
+      const field = el.dataset.cardInput;
+      el.addEventListener('input', debounce(() => {
+        const card = findCard(cid, cardEl.dataset.cardId);
+        if (card) { card[field] = el.value; saveState(); }
+      }, 300));
+    });
+
+    // 卡片内链接添加（按钮 + 回车）
+    const bindCardLink = (inp) => {
+      const doAdd = () => {
+        const cardEl = inp.closest('[data-card-id]');
+        const v = inp.value.trim();
+        if (v) addCardLink(cid, cardEl.dataset.cardId, v);
+      };
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); doAdd(); }
+      });
+      const btn = inp.parentElement.querySelector('button[data-act="card-add-link"]');
+      if (btn) btn.addEventListener('click', doAdd);
+    };
+    content.querySelectorAll('[data-card-link-input]').forEach(bindCardLink);
+
+    // 卡片链接删除
+    content.querySelectorAll('[data-act="rm-card-link"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cardEl = b.closest('[data-card-id]');
+        removeCardLink(cid, cardEl.dataset.cardId, parseInt(b.dataset.i, 10));
+      });
+    });
+
+    // 卡片图片添加
+    content.querySelectorAll('[data-act="card-add-img"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cardEl = b.closest('[data-card-id]');
+        triggerCardImageAdd(cid, cardEl.dataset.cardId);
+      });
+    });
+
+    // 卡片视频添加 / 删除
+    content.querySelectorAll('[data-act="add-card-video"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cardEl = b.closest('[data-card-id]');
+        triggerVideoAdd(cid, cardEl.dataset.cardId);
+      });
+    });
+    content.querySelectorAll('[data-act="rm-card-video"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const cardEl = b.closest('[data-card-id]');
+        removeCardVideo(cid, cardEl.dataset.cardId, b.dataset.v);
+      });
+    });
+  }
+
+  /* 形色自修：视频库 */
+  if (cid === 'cat_shape') {
+    content.querySelectorAll('[data-act="add-lib-video"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        triggerVideoAdd(cid, null, true);
+      });
+    });
+    const libLinkBtn = content.querySelector('[data-act="add-lib-link"]');
+    const libLinkInput = content.querySelector('[data-lib-link-input]');
+    const doAddLibLink = () => {
+      if (!libLinkInput) return;
+      const v = libLinkInput.value.trim();
+      if (!v) return toast('请先粘贴链接');
+      if (!Array.isArray(state.settings.cat_shape.videoLinks)) state.settings.cat_shape.videoLinks = [];
+      state.settings.cat_shape.videoLinks.push({ url: v, title: v });
+      saveState();
+      renderContent();
+      toast('链接已加入视频库');
+    };
+    if (libLinkBtn) libLinkBtn.addEventListener('click', doAddLibLink);
+    if (libLinkInput) libLinkInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); doAddLibLink(); }
+    });
+    content.querySelectorAll('[data-act="rm-lib-link"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const i = parseInt(b.dataset.i, 10);
+        state.settings.cat_shape.videoLinks.splice(i, 1);
+        saveState();
+        renderContent();
+      });
+    });
+    content.querySelectorAll('[data-act="toggle-lib-video"]').forEach(el => {
+      el.addEventListener('click', () => toggleLibVideo(el.dataset.v));
+    });
+    content.querySelectorAll('[data-act="rm-lib-video"]').forEach(b => {
+      b.addEventListener('click', () => removeLibVideo(b.dataset.v));
+    });
+  }
+
+  /* 公号文稿：链接 */
+  if (cid === 'cat_pub') {
+    const addBtn = content.querySelector('[data-act="add-pub-link"]');
+    const urlIn = content.querySelector('#pubLinkInput');
+    const titleIn = content.querySelector('#pubLinkTitle');
+    const doAddPubLink = () => {
       const url = urlIn.value.trim();
       if (!url) return toast('请先粘贴链接');
       const data = ensureData(cid, state.currentDate);
-      const listKey = target === 'pub' ? 'pubLinks' : 'storyLinks';
-      if (!Array.isArray(data[listKey])) data[listKey] = [];
-      data[listKey].push({ url, title: titleIn.value.trim() || url, type: 'link' });
+      if (!Array.isArray(data.pubLinks)) data.pubLinks = [];
+      data.pubLinks.push({ url, title: titleIn.value.trim() || url, type: 'link' });
       saveState();
       urlIn.value = ''; titleIn.value = '';
       renderContent();
+    };
+    if (addBtn) addBtn.addEventListener('click', doAddPubLink);
+    if (urlIn) urlIn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); doAddPubLink(); }
     });
-  });
+    content.querySelectorAll('[data-act="rm-pub-link"]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const data = ensureData(cid, state.currentDate);
+        if (Array.isArray(data.pubLinks)) {
+          data.pubLinks.splice(parseInt(b.dataset.i, 10), 1);
+          saveState();
+          renderContent();
+        }
+      });
+    });
+  }
 
-  // 快速添加（每分类的 + 按钮）
-  content.querySelectorAll('[data-act="quick-add"]').forEach(b => b.addEventListener('click', () => {
-    const input = content.querySelector('[data-input="newCheck"]');
-    if (input && input.value.trim()) {
-      addCheckItem(cid, 'checkItems', input.value.trim());
-      input.value = '';
-    }
-  }));
-  content.querySelectorAll('[data-act="quick-ex"]').forEach(b => b.addEventListener('click', () => {
-    const input = content.querySelector('[data-input="newEx"]');
-    if (input && input.value.trim()) {
-      addCheckItem(cid, 'exercise', input.value.trim());
-      input.value = '';
-    }
-  }));
-  content.querySelectorAll('[data-act="quick-growth"]').forEach(b => b.addEventListener('click', () => {
-    const input = content.querySelector('[data-input="newGrowth"]');
-    if (input && input.value.trim()) {
-      addCheckItem(cid, 'growth', input.value.trim());
-      input.value = '';
-    }
-  }));
-  content.querySelectorAll('[data-act="quick-school"]').forEach(b => b.addEventListener('click', () => {
-    const input = content.querySelector('[data-input="newSchool"]');
-    if (input && input.value.trim()) {
-      addCheckItem(cid, 'checkItems', input.value.trim());
-      input.value = '';
-    }
-  }));
-  content.querySelectorAll('[data-act="quick-misc"]').forEach(b => b.addEventListener('click', () => {
-    const input = content.querySelector('[data-input="newMisc"]');
-    if (input && input.value.trim()) {
-      addCheckItem(cid, 'checkItems', input.value.trim());
-      input.value = '';
-    }
-  }));
-
-  // 学堂杂务 特殊
+  /* 学堂杂务 */
   if (cid === 'cat_school') {
     const wt = content.querySelector('#weekTitle');
     if (wt) wt.addEventListener('input', debounce(() => { saveField(cid, 'weekTitle', wt.value); }, 300));
@@ -1660,7 +2348,7 @@ function bindContentEvents(cat) {
     });
   }
 
-  // AI 按钮
+  /* 花朝知晤：AI */
   if (cid === 'cat_zhihu') {
     const ai = content.querySelector('[data-act="ai-zhihu"]');
     if (ai) ai.addEventListener('click', () => generateAIPolish('zhihu'));
@@ -1677,71 +2365,51 @@ function bindContentEvents(cat) {
       renderContent();
     });
   }
-  if (cid === 'cat_joke') {
-    const ai1 = content.querySelector('[data-act="ai-joke-daily"]');
-    if (ai1) ai1.addEventListener('click', () => generateAIPolish('jokeDaily'));
-    const ai2 = content.querySelector('[data-act="ai-joke-full"]');
-    if (ai2) ai2.addEventListener('click', () => generateAIPolish('jokeFull'));
-    const cp1 = content.querySelector('[data-act="copy-joke"]');
-    if (cp1) cp1.addEventListener('click', () => {
-      const data = ensureData(cid, state.currentDate);
-      copyText(data.dailyTalk || '');
-    });
-    const cp2 = content.querySelector('[data-act="copy-joke-full"]');
-    if (cp2) cp2.addEventListener('click', () => {
-      const data = ensureData(cid, state.currentDate);
-      copyText(data.fullTalk || '');
-    });
-  }
 
-  // 故事灵感簿：AI 润色
-  if (cid === 'cat_story') {
-    const ai = content.querySelector('[data-act="ai-story"]');
-    if (ai) ai.addEventListener('click', () => generateAIPolish('story'));
-    const cp = content.querySelector('[data-act="copy-story"]');
-    if (cp) cp.addEventListener('click', () => {
+  /* 说笑备忘录：换一篇推荐文稿 */
+  if (cid === 'cat_joke') {
+    const cs = content.querySelector('[data-act="change-script"]');
+    if (cs) cs.addEventListener('click', () => {
       const data = ensureData(cid, state.currentDate);
-      copyText(data.storyPolish || '');
-    });
-    const cl = content.querySelector('[data-act="clear-story"]');
-    if (cl) cl.addEventListener('click', () => {
-      const data = ensureData(cid, state.currentDate);
-      data.storyPolish = '';
+      const cur = getDailyScriptIndex(state.currentDate, data.scriptOverride);
+      let next = cur;
+      while (next === cur && STANDUP_SCRIPTS.length > 1) {
+        next = Math.floor(Math.random() * STANDUP_SCRIPTS.length);
+      }
+      data.scriptOverride = next;
       saveState();
       renderContent();
     });
   }
+}
 
-  // 视频上传 / 移除（支持多个）：形色自修 + 花朝知晤
-  if (cid === 'cat_shape' || cid === 'cat_zhihu') {
-    const isShape = (cid === 'cat_shape');
-    const addBtn = content.querySelector(isShape ? '#exVideoBtn' : '#zhihuVideoBtn');
-    if (addBtn) addBtn.addEventListener('click', () => {
-      const vi = document.getElementById('videoInput');
-      if (vi) { vi.value = ''; vi.click(); }
-    });
-    const rmAct = isShape ? 'rm-ex-video' : 'rm-zhihu-video';
-    const vKey = isShape ? 'exerciseVideos' : 'zhihuVideos';
-    content.querySelectorAll(`[data-act="${rmAct}"]`).forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.vidIndex, 10);
-        const data = ensureData(cid, state.currentDate);
-        if (!Array.isArray(data[vKey])) data[vKey] = [];
-        const oldId = data[vKey][idx];
-        data[vKey].splice(idx, 1);
-        saveState();
-        renderContent();
-        if (oldId) mediaDelete(oldId).catch(() => {});
-      });
-    });
-  }
+/* 滑动卡片交互 */
+function bindSwipeDeck(deck) {
+  const track = deck.querySelector('.swipe-track');
+  if (!track) return;
+  const dots = Array.from(deck.querySelectorAll('.swipe-dot[data-goto]'));
+  const step = () => {
+    const c = track.querySelector('.swipe-card');
+    return c ? (c.offsetWidth + 10) : (track.clientWidth || 300);
+  };
+  const update = debounce(() => {
+    const idx = Math.round(track.scrollLeft / step());
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  }, 60);
+  track.addEventListener('scroll', update, { passive: true });
+  dots.forEach(d => d.addEventListener('click', () => {
+    const i = parseInt(d.dataset.goto, 10);
+    const el = track.children[i];
+    if (el) track.scrollTo({ left: el.offsetLeft, behavior: 'smooth' });
+  }));
+  deck.querySelectorAll('.swipe-arrow').forEach(a => a.addEventListener('click', () => {
+    track.scrollBy({ left: parseInt(a.dataset.arrow, 10) * step(), behavior: 'smooth' });
+  }));
 }
 
 function defaultImgKey(cid) {
   if (cid === 'cat_daily') return 'images';
-  if (cid === 'cat_shape') return 'images'; // 主图区
   if (cid === 'cat_rui') return 'photos';
-  if (cid === 'cat_misc') return 'moodImages';
   return 'images';
 }
 
@@ -1758,46 +2426,94 @@ function saveField(cid, key, value) {
   if (key.startsWith('health.')) {
     if (!data.health) data.health = {};
     data.health[key.split('.')[1]] = value;
-  } else if (key === 'videoLink') {
-    data.videoLink = value;
   } else if (key === 'height' || key === 'ruiWeight' || key === 'diet' || key === 'sleep' || key === 'observe') {
     if (!data.records) data.records = {};
-    data.records[key === 'ruiWeight' ? 'ruiWeight' : key] = value;
+    data.records[key] = value;
   } else {
     data[key] = value;
   }
   saveState();
 }
 
+/* ============================================================
+   每日打卡项：「每日固定」（全局，每天出现）+「今日增项」（仅当天）
+   - 固定项存 settings.fixedItems，增删同步所有日期
+   - 当日增项存 data[date].extraItems，次日清空
+   - 勾选状态统一存 data[date].dayDones（按天独立）
+   ============================================================ */
+function getExtraItems(cid) {
+  const data = ensureData(cid, state.currentDate);
+  if (!Array.isArray(data.extraItems)) data.extraItems = [];
+  return data.extraItems;
+}
+function getFixedItems(cid) {
+  if (!state.settings[cid]) state.settings[cid] = {};
+  if (!Array.isArray(state.settings[cid].fixedItems)) state.settings[cid].fixedItems = [];
+  return state.settings[cid].fixedItems;
+}
+/* 按 itemId 定位所在列表（固定项 or 当日增项） */
+function findItemList(cid, itemId) {
+  const fixed = getFixedItems(cid);
+  if (fixed.some(x => x.id === itemId)) return fixed;
+  const extra = getExtraItems(cid);
+  if (extra.some(x => x.id === itemId)) return extra;
+  return null;
+}
+
 function toggleCheck(cid, itemId) {
   const data = ensureData(cid, state.currentDate);
-  const donesKey = cid === 'cat_shape' ? 'exDones' :
-                   cid === 'cat_rui'   ? 'growthDones' :
-                   cid === 'cat_school' ? 'schoolDones' :
-                   cid === 'cat_misc'  ? 'miscDones' :
-                   'checkDones';
-  if (!data[donesKey]) data[donesKey] = {};
-  data[donesKey][itemId] = !data[donesKey][itemId];
+  if (!data.dayDones) data.dayDones = {};
+  data.dayDones[itemId] = !data.dayDones[itemId];
   saveState();
   renderContent();
 }
 
-function addCheckItem(cid, listKey, name) {
-  if (!state.settings[cid]) state.settings[cid] = {};
-  if (!state.settings[cid][listKey]) state.settings[cid][listKey] = [];
-  const list = state.settings[cid][listKey];
-  list.push({ id: uid(), name, order: list.length });
+/* 加入今日（仅当天） */
+function addDayItem(cid, name) {
+  if (!name || !name.trim()) return;
+  name = name.trim();
+  const fixed = getFixedItems(cid);
+  const extra = getExtraItems(cid);
+  if (fixed.some(x => x.name === name) || extra.some(x => x.name === name)) {
+    return toast('今天已有这项了');
+  }
+  extra.push({ id: uid(), name, order: extra.length });
+  // 自动收进常用池（去重）
+  if (!Array.isArray(state.settings[cid].commonChecks)) state.settings[cid].commonChecks = [];
+  if (!state.settings[cid].commonChecks.some(x => x.name === name)) {
+    state.settings[cid].commonChecks.push({ id: uid(), name });
+  }
   saveState();
   renderContent();
+  toast('已加入今日增项（仅当天显示）');
+}
+
+/* 设为每日固定项 */
+function addFixedItem(cid, name) {
+  if (!name || !name.trim()) return;
+  name = name.trim();
+  const fixed = getFixedItems(cid);
+  if (fixed.some(x => x.name === name)) return toast('固定项里已有这项了');
+  fixed.push({ id: uid(), name, order: fixed.length });
+  if (!Array.isArray(state.settings[cid].commonChecks)) state.settings[cid].commonChecks = [];
+  if (!state.settings[cid].commonChecks.some(x => x.name === name)) {
+    state.settings[cid].commonChecks.push({ id: uid(), name });
+  }
+  saveState();
+  renderContent();
+  toast('已设为每日固定项 ✓');
 }
 
 function editCheckItem(cid, itemId) {
-  let list = findItemList(cid, itemId);
+  const list = findItemList(cid, itemId);
   if (!list) return;
   const it = list.find(x => x.id === itemId);
+  if (!it) return;
+  const isFixed = list === getFixedItems(cid);
   showModal(`
     <h3>修改名称</h3>
     <div class="field"><input type="text" id="newNameInput" value="${escapeHTML(it.name)}" /></div>
+    ${isFixed ? `<p class="hint" style="margin:0 0 10px 0">这是「每日固定项」，改名会同步到所有日期。</p>` : ''}
     <div class="actions">
       <button class="btn" id="cancelBtn">取消</button>
       <button class="btn primary" id="saveBtn">保存</button>
@@ -1817,7 +2533,11 @@ function editCheckItem(cid, itemId) {
 function deleteCheckItem(cid, itemId) {
   const list = findItemList(cid, itemId);
   if (!list) return;
-  if (!confirm('确定要删除这个打卡项吗？历史记录会保留。')) return;
+  const isFixed = list === getFixedItems(cid);
+  const msg = isFixed
+    ? '这是「每日固定项」，删除后所有日期都不再显示。确定删除？'
+    : '从今天的增项移除这一项？（不影响固定项与常用标签）';
+  if (!confirm(msg)) return;
   const idx = list.findIndex(x => x.id === itemId);
   if (idx >= 0) list.splice(idx, 1);
   saveState();
@@ -1827,60 +2547,155 @@ function deleteCheckItem(cid, itemId) {
 function moveCheckItem(cid, itemId, dir) {
   const list = findItemList(cid, itemId);
   if (!list) return;
-  const sorted = [...list].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const idx = sorted.findIndex(x => x.id === itemId);
+  const idx = list.findIndex(x => x.id === itemId);
   const j = idx + dir;
-  if (j < 0 || j >= sorted.length) return;
-  [sorted[idx], sorted[j]] = [sorted[j], sorted[idx]];
-  sorted.forEach((x, i) => x.order = i);
+  if (idx < 0 || j < 0 || j >= list.length) return;
+  [list[idx], list[j]] = [list[j], list[idx]];
+  list.forEach((x, i) => x.order = i);
   saveState();
   renderContent();
 }
 
-function findItemList(cid, itemId) {
-  const sets = state.settings[cid] || {};
-  for (const k of ['checkItems', 'exercise', 'growth']) {
-    if (sets[k] && sets[k].some(x => x.id === itemId)) return sets[k];
+/* ============================================================
+   连续打卡天数（当日「固定项 + 增项」全部勾完记 1 天）
+   ============================================================ */
+function isDayAllDone(cid, dateStr) {
+  const fixed = (state.settings[cid] || {}).fixedItems || [];
+  const dayData = (state.data[cid] || {})[dateStr];
+  const extra = (dayData && dayData.extraItems) || [];
+  const items = fixed.concat(extra);
+  if (!items.length) return false;
+  const dones = (dayData && dayData.dayDones) || {};
+  return items.every(it => dones[it.id]);
+}
+
+function computeStreak(cid) {
+  let streak = 0;
+  let d = todayStr();
+  if (!isDayAllDone(cid, d)) d = dateOffset(d, -1);
+  for (let i = 0; i < 3650; i++) {
+    if (isDayAllDone(cid, d)) { streak++; d = dateOffset(d, -1); }
+    else break;
   }
-  return null;
+  return streak;
 }
 
 /* ============================================================
-   图片 & 文件
+   卡片操作
    ============================================================ */
-let pendingImgCat = null, pendingImgKey = null;
+function addCard(cid) {
+  const cards = getDeckCards(cid);
+  const card = newCard(cid);
+  cards.push(card);
+  saveState();
+  renderContent();
+  setTimeout(() => {
+    const track = document.querySelector(`.swipe-deck[data-deck="${cid}"] .swipe-track`);
+    const el = track && track.querySelector(`.swipe-card[data-card-id="${card.id}"]`);
+    if (track && el) track.scrollTo({ left: el.offsetLeft, behavior: 'smooth' });
+  }, 60);
+}
+
+function deleteCard(cid, cardId) {
+  const cards = getDeckCards(cid);
+  if (cards.length <= 1) return toast('至少保留一张卡片');
+  const card = cards.find(c => c.id === cardId);
+  if (!card) return;
+  const hasContent =
+    (card.text && card.text.trim()) ||
+    (card.title && card.title.trim()) ||
+    (card.content && card.content.trim()) ||
+    (card.videos && card.videos.length) ||
+    (card.links && card.links.length) ||
+    (card.images && card.images.length);
+  if (hasContent && !confirm('这张卡片有内容，确定删除吗？')) return;
+  const i = cards.findIndex(c => c.id === cardId);
+  if (i >= 0) cards.splice(i, 1);
+  saveState();
+  renderContent();
+}
+
+function removeCardVideo(cid, cardId, vid) {
+  const card = findCard(cid, cardId);
+  if (!card) return;
+  card.videos = (card.videos || []).filter(v => v !== vid);
+  saveState();
+  renderContent();
+  mediaDelete(vid).catch(() => {});
+}
+
+function addCardLink(cid, cardId, url) {
+  if (!url) return toast('请先粘贴链接');
+  const card = findCard(cid, cardId);
+  if (!card) return;
+  if (!Array.isArray(card.links)) card.links = [];
+  let title = url.replace(/^https?:\/\//, '').split('/')[0] || url;
+  card.links.push({ url, title, type: 'link' });
+  saveState();
+  renderContent();
+  toast('链接已添加 ✓');
+}
+
+function removeCardLink(cid, cardId, i) {
+  const card = findCard(cid, cardId);
+  if (card && Array.isArray(card.links)) {
+    card.links.splice(i, 1);
+    saveState();
+    renderContent();
+  }
+}
+
+/* ============================================================
+   图片
+   ============================================================ */
+let pendingImg = null; // {cid, key} 或 {cid, cardId}
 function triggerImageAdd(cid, key) {
-  pendingImgCat = cid; pendingImgKey = key;
+  pendingImg = { cid, key };
+  const input = document.getElementById('fileInput');
+  input.value = '';
+  input.click();
+}
+function triggerCardImageAdd(cid, cardId) {
+  pendingImg = { cid, cardId };
   const input = document.getElementById('fileInput');
   input.value = '';
   input.click();
 }
 
 function handleFiles(files) {
-  if (!pendingImgCat) return;
-  const cid = pendingImgCat, key = pendingImgKey;
-  const data = ensureData(cid, state.currentDate);
-  if (!Array.isArray(data[key])) data[key] = [];
-  const max = 5;
+  if (!pendingImg) return;
+  const target0 = pendingImg;
+  pendingImg = null;
+  const imgs = Array.from(files).filter(f => f.type && f.type.startsWith('image/')).slice(0, 9);
+  if (!imgs.length) return;
+
+  let target = null;
+  if (target0.cardId) {
+    const card = findCard(target0.cid, target0.cardId);
+    if (!card) return;
+    if (!Array.isArray(card.images)) card.images = [];
+    target = card.images;
+  } else {
+    const data = ensureData(target0.cid, state.currentDate);
+    if (!Array.isArray(data[target0.key])) data[target0.key] = [];
+    target = data[target0.key];
+  }
+
   let done = 0;
-  for (let i = 0; i < Math.min(files.length, max); i++) {
-    const f = files[i];
-    if (!f.type.startsWith('image/')) continue;
+  imgs.forEach(f => {
     const reader = new FileReader();
     reader.onload = (ev) => {
-      // 压缩到 1280px
       compressImage(ev.target.result, 1280, 0.78).then(small => {
-        data[key].push(small);
+        target.push(small);
         done++;
-        if (done === Math.min(files.length, max) || done === files.length) {
+        if (done === imgs.length) {
           saveState();
           renderContent();
         }
       });
     };
     reader.readAsDataURL(f);
-  }
-  pendingImgCat = null;
+  });
 }
 
 function compressImage(dataUrl, maxSize, quality) {
@@ -1904,7 +2719,27 @@ function compressImage(dataUrl, maxSize, quality) {
   });
 }
 
-/* ---- 视频媒资：存 IndexedDB（避免撑爆 localStorage） ---- */
+function removeImage(cid, key, idx) {
+  const data = ensureData(cid, state.currentDate);
+  if (Array.isArray(data[key])) {
+    data[key].splice(idx, 1);
+    saveState();
+    renderContent();
+  }
+}
+
+function removeCardImage(cid, cardId, idx) {
+  const card = findCard(cid, cardId);
+  if (card && Array.isArray(card.images)) {
+    card.images.splice(idx, 1);
+    saveState();
+    renderContent();
+  }
+}
+
+/* ============================================================
+   视频媒资：存 IndexedDB（避免撑爆 localStorage）
+   ============================================================ */
 const MEDIA_DB_NAME = 'huazhao_media_v1';
 function openMediaDB() {
   return new Promise((resolve, reject) => {
@@ -1958,47 +2793,75 @@ function resolveMedia(content) {
     }).catch(() => {});
   });
 }
-function handleExerciseVideo(file) {
-  const cid = state.currentCategory;
-  if (cid !== 'cat_shape' && cid !== 'cat_zhihu') return;
-  if (!file || !file.type.startsWith('video/')) return toast('请选择视频文件');
-  if (file.size > 2000 * 1024 * 1024) return toast('单个视频过大（>2GB），请压缩后再上传');
-  const data = ensureData(cid, state.currentDate);
-  const key = (cid === 'cat_shape') ? 'exerciseVideos' : 'zhihuVideos';
-  if (!Array.isArray(data[key])) data[key] = [];
-  const id = 'vid_' + uid();
-  // 直接以 Blob 存入 IndexedDB，避免大视频转 base64 撑爆内存
-  mediaPut(id, file).then(() => {
-    data[key].push(id);
+
+/* 视频上传：目标 = 全局视频库（形色自修）或某张卡片（花朝知晤） */
+let pendingVideo = null; // {cid, cardId} 或 {cid, lib:true}
+function triggerVideoAdd(cid, cardId, lib) {
+  pendingVideo = lib ? { cid, lib: true } : { cid, cardId };
+  const vi = document.getElementById('videoInput');
+  vi.value = '';
+  vi.click();
+}
+
+function handleVideoFiles(files) {
+  const target = pendingVideo;
+  pendingVideo = null;
+  if (!target) return;
+  const all = Array.from(files || []);
+  const valid = all.filter(f => f.type && f.type.startsWith('video/'));
+  if (!valid.length) return toast('请选择视频文件');
+  const tooBig = valid.filter(f => f.size > 2000 * 1024 * 1024).length;
+  const list = valid.filter(f => f.size <= 2000 * 1024 * 1024);
+  if (tooBig) toast(`已跳过 ${tooBig} 个超过 2GB 的视频`);
+  if (!list.length) return;
+
+  const entries = list.map(f => ({ id: 'vid_' + uid(), f }));
+  Promise.all(entries.map(en => mediaPut(en.id, en.f))).then(() => {
+    if (target.lib) {
+      const s = state.settings.cat_shape;
+      if (!Array.isArray(s.videos)) s.videos = [];
+      entries.forEach(en => s.videos.push(en.id));
+    } else {
+      const card = findCard(target.cid, target.cardId);
+      if (card) {
+        if (!Array.isArray(card.videos)) card.videos = [];
+        entries.forEach(en => card.videos.push(en.id));
+      }
+    }
     saveState();
     renderContent();
+    toast(`已保存 ${entries.length} 个视频 ✓`);
   }).catch(() => toast('视频保存失败（本机存储空间可能不足；可尝试更短或更清晰的片段）'));
 }
 
-function removeImage(cid, key, idx) {
-  const data = ensureData(cid, state.currentDate);
-  if (Array.isArray(data[key])) {
-    data[key].splice(idx, 1);
-    saveState();
-    renderContent();
-  }
+/* 视频库操作（形色自修） */
+function toggleLibVideo(vid) {
+  const data = ensureData('cat_shape', state.currentDate);
+  if (!data.videoDones) data.videoDones = {};
+  data.videoDones[vid] = !data.videoDones[vid];
+  saveState();
+  renderContent();
+}
+function removeLibVideo(vid) {
+  if (!confirm('确定从视频库删除这个视频吗？\n其他视频与历史跟练记录不受影响。')) return;
+  const s = state.settings.cat_shape;
+  s.videos = (s.videos || []).filter(v => v !== vid);
+  saveState();
+  renderContent();
+  mediaDelete(vid).catch(() => {});
 }
 
-function removeLink(cid, idx) {
-  const data = ensureData(cid, state.currentDate);
-  for (const k of ['pubLinks', 'storyLinks']) {
-    if (Array.isArray(data[k])) {
-      // 公号链接和故事链接都用 cid 自身判断
-      const isPub = (cid === 'cat_pub' && k === 'pubLinks');
-      const isStory = (cid === 'cat_story' && k === 'storyLinks');
-      if (isPub || isStory) {
-        data[k].splice(idx, 1);
-        saveState();
-        renderContent();
-        return;
-      }
-    }
-  }
+/* ============================================================
+   每日推荐文稿
+   ============================================================ */
+function getDailyScriptIndex(dateStr, override) {
+  if (override != null && STANDUP_SCRIPTS[override]) return override;
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) >>> 0;
+  return h % STANDUP_SCRIPTS.length;
+}
+function getDailyScript(dateStr, override) {
+  return STANDUP_SCRIPTS[getDailyScriptIndex(dateStr, override)];
 }
 
 /* ============================================================
@@ -2010,7 +2873,6 @@ function computeWeek(startStr, currentStr) {
   const cur = new Date(currentStr + 'T00:00:00');
   const diffDays = Math.floor((cur - start) / (1000 * 60 * 60 * 24));
   const weekIndex = diffDays < 0 ? 0 : Math.floor(diffDays / 7) + 1;
-  // 计算本周起止
   const weekStart = new Date(start);
   weekStart.setDate(start.getDate() + (weekIndex - 1) * 7);
   const weekEnd = new Date(weekStart);
@@ -2027,25 +2889,11 @@ function computeWeek(startStr, currentStr) {
 function generateAIPolish(kind) {
   const cid = state.currentCategory;
   const data = ensureData(cid, state.currentDate);
-  let src = '', out = '';
   if (kind === 'zhihu') {
-    src = (data.thought || '').trim();
+    const cards = getDeckCards('cat_zhihu');
+    const src = cards.map(c => (c.text || '').trim()).filter(Boolean).join('\n');
     if (!src) return toast('请先在「随心记」写一些想法');
-    out = polishForDouyin(src);
-    data.aiPolish = out;
-  } else if (kind === 'jokeDaily') {
-    out = dailyStandupDraft();
-    data.dailyTalk = out;
-  } else if (kind === 'jokeFull') {
-    src = (data.crumbs || '').trim();
-    if (!src) return toast('请先在「即兴碎话本」写一些灵感');
-    out = expandStandup(src);
-    data.fullTalk = out;
-  } else if (kind === 'story') {
-    src = (data.content || '').trim();
-    if (!src) return toast('请先在「我的灵感」写点内容');
-    out = polishForStory(src);
-    data.storyPolish = out;
+    data.aiPolish = polishForDouyin(src);
   }
   saveState();
   renderContent();
@@ -2066,90 +2914,6 @@ ${lines.map((l, i) => `${i + 1}. ${l}`).join('\n')}
 所以啊，生活哪有什么标准答案，心里有光，脚下就有路。我是花朝，今天的感悟，送给同样在路上的你。
 
 — 改编自你今日的「随心记」—`;
-}
-
-function polishForStory(text) {
-  const lines = text.split(/\n+/).map(s => s.trim()).filter(Boolean);
-  if (!lines.length) lines.push(text || '（空）');
-  const title = (lines[0] || '未命名灵感').slice(0, 30);
-  const body = lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
-  const char = lines[1] || '（在灵感里补上主角的名字与性格，AI 会在此帮你铺陈）';
-  return `【故事润色稿 · 成稿】
-
-🏷 暂定题目：${title}
-
-🎬 开场（钩子）：
-${lines[0] || ''}
-
-🎭 人物小传（据素材提炼）：
-${char}
-
-📖 正文脉络（把灵感串成线）：
-${body}
-
-💡 建议打磨方向：
-· 给主角一个「想要却得不到」的目标，故事才有张力
-· 在第三段埋一个反转让平淡的灵感变精彩
-· 结尾回到开场的画面，首尾呼应更耐读
-
-✨ 备选金句：
-有些故事不必圆满，只要有人愿意为它停下脚步，就值得被讲一遍。
-
-— 改编自你今日的「灵感」—`;
-}
-
-function dailyStandupDraft() {
-  const topics = [
-    { t: '通勤', a: '地铁上挤得像沙丁鱼罐头，对面大哥却稳如泰山吃煎饼，那一刻我悟了：成年人的体面，是边被生活挤压边保持微笑。' },
-    { t: '点外卖', a: '点了一份 28 块的轻食沙拉，结果送来 4 片生菜加两片黄瓜。我看着它，它看着我，最后我们达成了和解 —— 加了一份鸡腿饭。' },
-    { t: '加班', a: '老板说"咱们加个小班"，我信了；老板说"很快就好"，我又信了；老板说"辛苦大家"，我哭了——原来成年人的崩溃，从相信老板开始。' },
-    { t: '健身', a: '办了 3000 块的健身卡，去了两次，第二次还是去找厕所。第三次决心再去，结果健身房倒闭了。教练发微信："姐，您是我们今年唯一的 VIP。"' },
-    { t: '相亲', a: '媒婆说对方"老实、本分、踏实肯干"，见面发现果然很老实——老实到全程只会说"嗯"和"哦"。回家我跟妈说："妈，他确实很踏实，踏实到地都不愿意聊。"' }
-  ];
-  const pick = topics[Math.floor(Math.random() * topics.length)];
-  return `【今日脱口秀 · ${pick.t}主题】
-
-🎤 开场：
-朋友们，我跟你们说，最近我悟出一个道理……
-
-📜 正文：
-${pick.a}
-
-哈哈，是不是扎心了？这就是生活的真相啊！
-你以为你在掌控生活，其实是生活在拿捏你。
-但你笑一笑，生活它又能拿你怎么样呢？
-
-🔥 收尾：
-我是花朝，每天一段，让你笑着过完这一天。
-关注我，咱们一起把苦日子过成段子。`;
-}
-
-function expandStandup(crumbs) {
-  const items = crumbs.split(/\n+/).map(s => s.trim()).filter(Boolean);
-  return `【脱口秀完整稿件 · AI 扩写】
-
-🎬 钩子（5秒）：
-朋友们，我最近发现一个真相 ——
-
-📖 主体（3段）：
-
-第一段 · 铺垫
-${items[0] || '事情是这样的……'}
-
-第二段 · 转折
-你以为到这里就完了？天真。
-${items[1] || '然后神奇的事情发生了……'}
-
-第三段 · 升华
-直到那一刻我才明白：
-${items[2] || '原来所有的崩溃，都藏着最深的自洽。'}
-
-💡 金句：
-生活的真相，是笑着把鸡毛做成掸子。
-
-🎤 收尾：
-我是花朝，把你身边的碎事写成段子。
-喜欢的双击、关注、转发，我们明天见！`;
 }
 
 function copyText(text) {
@@ -2176,7 +2940,7 @@ function exportBackup() {
   try {
     const payload = {
       app: 'huazhao-workbench',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       state: {
         categories: state.categories,
@@ -2184,7 +2948,8 @@ function exportBackup() {
         currentDate: state.currentDate,
         data: state.data,
         settings: state.settings,
-        weeklyStart: state.weeklyStart
+        weeklyStart: state.weeklyStart,
+        schema: state.schema
       }
     };
     const json = JSON.stringify(payload, null, 2);
@@ -2216,11 +2981,14 @@ function importBackup(file) {
       }
       if (!confirm('导入将覆盖当前所有数据，确定继续吗？\n（建议先导出一份当前备份）')) return;
       state.categories = incoming.categories || state.categories;
-      state.currentCategory = incoming.currentCategory || state.categories[0]?.id;
+      state.currentCategory = incoming.currentCategory || (state.categories[0] ? state.categories[0].id : null);
       state.currentDate = incoming.currentDate || todayStr();
       state.data = incoming.data || {};
       state.settings = incoming.settings || {};
       state.weeklyStart = incoming.weeklyStart || todayStr();
+      state.schema = incoming.schema || 1;
+      migrateData();
+      loadStateDefaults();
       saveState();
       renderNav();
       renderContent();
@@ -2233,20 +3001,51 @@ function importBackup(file) {
   reader.readAsText(file);
 }
 
+/* 导入后补齐缺失的默认 settings 结构（不覆盖已有内容） */
+function loadStateDefaults() {
+  if (!state.categories || !state.categories.length) {
+    state.categories = DEFAULT_CATEGORIES.map(c => ({...c}));
+  }
+  if (!state.currentCategory || !state.categories.find(c => c.id === state.currentCategory)) {
+    state.currentCategory = state.categories[0] ? state.categories[0].id : null;
+  }
+  if (!state.currentDate) state.currentDate = todayStr();
+  if (!state.data) state.data = {};
+  if (!state.settings) state.settings = {};
+  if (!state.weeklyStart) state.weeklyStart = todayStr();
+  state.categories.forEach(cat => {
+    if (!state.settings[cat.id]) state.settings[cat.id] = {};
+    if (cat.id === 'cat_shape') {
+      if (!Array.isArray(state.settings[cat.id].fixedItems)) {
+        state.settings[cat.id].fixedItems = DEFAULT_CHECKS.cat_shape.exercise.map((n, i) => ({ id: uid(), name: n, order: i }));
+      }
+      if (!Array.isArray(state.settings[cat.id].videos)) state.settings[cat.id].videos = [];
+      if (!Array.isArray(state.settings[cat.id].videoLinks)) state.settings[cat.id].videoLinks = [];
+    } else if (cat.id === 'cat_rui') {
+      if (!Array.isArray(state.settings[cat.id].fixedItems)) {
+        state.settings[cat.id].fixedItems = DEFAULT_CHECKS.cat_rui.growth.map((n, i) => ({ id: uid(), name: n, order: i }));
+      }
+    } else if (DEFAULT_CHECKS[cat.id]) {
+      if (!Array.isArray(state.settings[cat.id].fixedItems)) {
+        state.settings[cat.id].fixedItems = DEFAULT_CHECKS[cat.id].map((n, i) => ({ id: uid(), name: n, order: i }));
+      }
+    }
+  });
+}
+
 /* ============================================================
    全局事件
    ============================================================ */
+const APP_VERSION = '2026.08.26.v2'; // 每次更新 GitHub Pages 时改这个版本号
+
 function setupGlobalEvents() {
-  // 菜单按钮
   document.getElementById('menuBtn').addEventListener('click', () => {
     toggleSidebar();
   });
-  // 点击遮罩关闭侧栏
   document.getElementById('scrim').addEventListener('click', () => {
     closeSidebar();
   });
 
-  // 日期导航
   document.getElementById('prevDayBtn').addEventListener('click', () => {
     state.currentDate = dateOffset(state.currentDate, -1);
     saveState();
@@ -2264,7 +3063,6 @@ function setupGlobalEvents() {
     toast('已回到今天');
   });
 
-  // 侧栏添加/管理
   document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryEditor(null));
   document.getElementById('manageCategoryBtn').addEventListener('click', () => {
     state.categoryEditorMode = !state.categoryEditorMode;
@@ -2272,7 +3070,6 @@ function setupGlobalEvents() {
     renderNav();
   });
 
-  // 数据备份：导出 / 导入
   document.getElementById('exportBtn').addEventListener('click', exportBackup);
   document.getElementById('importBtn').addEventListener('click', () => {
     document.getElementById('backupFileInput').value = '';
@@ -2283,24 +3080,56 @@ function setupGlobalEvents() {
     if (file) importBackup(file);
   });
 
-  // 模态框
+  /* 检查更新：抓取远程 index.html 的版本号，与本页对比 */
+  const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+  const updateBtnLabel = document.getElementById('updateBtnLabel');
+  if (checkUpdateBtn) {
+    checkUpdateBtn.addEventListener('click', () => {
+      updateBtnLabel.textContent = '检查中…';
+      fetch('./index.html', { cache: 'no-store' })
+        .then(r => r.text())
+        .then(html => {
+          const m = html.match(/const APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+          const remoteVersion = m ? m[1] : null;
+          if (!remoteVersion) {
+            toast('未能读取远程版本');
+            updateBtnLabel.textContent = '检查更新';
+            return;
+          }
+          if (remoteVersion !== APP_VERSION) {
+            checkUpdateBtn.classList.add('has-new');
+            updateBtnLabel.textContent = '🎉 有新版本 ' + remoteVersion;
+            if (confirm('检测到新版本 ' + remoteVersion + '，当前版本 ' + APP_VERSION + '。\n刷新页面即可更新吗？')) {
+              window.location.reload(true);
+            }
+          } else {
+            checkUpdateBtn.classList.remove('has-new');
+            updateBtnLabel.textContent = '已是最新 ' + APP_VERSION;
+            toast('当前已是最新版本');
+          }
+        })
+        .catch(() => {
+          toast('检查失败，请确认网络或手动刷新');
+          updateBtnLabel.textContent = '检查更新';
+        });
+    });
+  }
+
   document.getElementById('modalMask').addEventListener('click', (e) => {
     if (e.target.id === 'modalMask') closeModal();
   });
 
-  // 文件选择
   document.getElementById('fileInput').addEventListener('change', (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length) handleFiles(files);
   });
 
-  // 视频选择（形色自修·运动跟练）
   document.getElementById('videoInput').addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) handleExerciseVideo(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length) handleVideoFiles(files);
   });
 
-  // 左右滑动（触屏）
+  // 触屏：侧栏滑出/收起
   let touchStartX = 0, touchStartY = 0, touchStartT = 0;
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length !== 1) return;
@@ -2315,7 +3144,7 @@ function setupGlobalEvents() {
     const dy = e.changedTouches[0].clientY - touchStartY;
     const dt = Date.now() - touchStartT;
     if (dt > 600) return;
-    if (Math.abs(dy) > 60) return; // 主要是横向
+    if (Math.abs(dy) > 60) return;
     const sb = document.getElementById('sidebar');
     if (dx < -60 && !sb.classList.contains('hidden')) {
       closeSidebar();
@@ -2324,7 +3153,7 @@ function setupGlobalEvents() {
     }
   }, { passive: true });
 
-  // 鼠标拖动（桌面）
+  // 桌面：左缘拖拽呼出侧栏
   let mouseDown = false, mouseStartX = 0;
   document.addEventListener('mousedown', (e) => {
     if (e.clientX > 40) return;
@@ -2340,7 +3169,6 @@ function setupGlobalEvents() {
     }
   });
 
-  // 点击右侧空白关闭侧栏
   document.getElementById('main').addEventListener('click', (e) => {
     const sb = document.getElementById('sidebar');
     if (!sb.classList.contains('hidden') && (e.target.id === 'main' || e.target.classList.contains('content'))) {
@@ -2368,9 +3196,10 @@ function toggleSidebar() {
    ============================================================ */
 function init() {
   loadState();
+  migrateData();
+  loadStateDefaults();
   setupGlobalEvents();
   renderNav();
-  // 默认侧栏显示（首次打开），之后由用户自己控制
   renderContent();
   if (!localStorage.getItem(STORAGE_KEY + '_seen')) {
     localStorage.setItem(STORAGE_KEY + '_seen', '1');
@@ -2379,8 +3208,6 @@ function init() {
 }
 
 init();
-
-
 </script>
 </body>
 </html>
